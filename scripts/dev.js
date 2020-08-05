@@ -26,7 +26,6 @@ const server = http.Server(app);
 				console.log(chalk.cyan(`Build successfully finished in ${Date.now() - t} ms`));
 			}
 		} catch (e) {
-			console.error(e);
 			console.log(chalk.red('Build failed!'));
 		}
 	}
