@@ -1,16 +1,6 @@
 const esbuild = require('esbuild');
 const chalk = require('chalk');
-
-/**
- * ! EDIT THIS CONFIG
- * @type {esbuild.BuildOptions}
- */
-const buildOptions = {
-	entryPoints: ['./src/index.tsx'],
-	outfile: './build/script.js',
-	minify: true,
-	bundle: true,
-};
+const buildOptions = require('./config')('production');
 
 (async () => {
 	try {

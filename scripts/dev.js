@@ -4,28 +4,18 @@ const chalk = require('chalk');
 const http = require('http');
 const path = require('path');
 const express = require('express');
-const { copyDir } = require('./file-operations');
+const utils = require('./utils');
+const buildOptions = require('./config')('development');
 
 const app = express();
 const server = http.Server(app);
-
-/**
- * ! EDIT THIS CONFIG
- * @type {esbuild.BuildOptions}
- */
-const buildOptions = {
-	entryPoints: ['./src/index.tsx'],
-	outfile: './build/script.js',
-	minify: false,
-	bundle: true,
-};
 
 (async () => {
 	const build = async () => {
 		try {
 			const t = Date.now();
 			console.log(chalk.green('Building...'));
-			copyDir('./public', './build');
+			utils.copyDir('./public', './build');
 			const { warnings } = await esbuild.build(buildOptions);
 			if (warnings.length) {
 				for (const warning of warnings) {
