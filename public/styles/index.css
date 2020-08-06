@@ -1,0 +1,26 @@
+* {
+	box-sizing: border-box;
+	font-family: monospace;
+}
+
+*::selection {
+	background-color: #000000;
+	color: #ffffff;
+}
+
+body {
+	margin: 0;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background-color: #000000;
+	color: #ffffff;
+	font-size: 13px;
+}
+
+header, section, footer, aside, nav, main, article, figure {
+  display: block;
+}
+
+code {
+	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
