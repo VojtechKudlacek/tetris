@@ -1,4 +1,5 @@
-export const BLOCKS: Record<BlockTypes, Shape> = {
+type BLOCKS_KEYS = 'I' | 'J' | 'L' | 'O' | 'S' | 'T' | 'Z';
+export const BLOCKS: Record<BLOCKS_KEYS, Shape> = {
 	I: [
 		[0, 0, 0, 0],
 		[1, 1, 1, 1],
@@ -36,12 +37,14 @@ export const BLOCKS: Record<BlockTypes, Shape> = {
 	]
 };
 
-export const KEYS: Record<KnownKeys, number> = {
+type KEYS_KEYS = 'ARROW_LEFT' | 'ARROW_UP' | 'ARROW_RIGHT' | 'ARROW_DOWN' | 'SPACE' | 'P';
+export const KEYS: Record<KEYS_KEYS, number> = {
 	ARROW_LEFT: 37,
 	ARROW_UP: 38,
 	ARROW_RIGHT: 39,
 	ARROW_DOWN: 40,
-	SPACE: 32
+	SPACE: 32,
+	P: 80,
 };
 
 export const COLORS: Record<Color, ColorSchema> = {
@@ -54,9 +57,10 @@ export const COLORS: Record<Color, ColorSchema> = {
 	green: { light: '#CCE900', dark: '#2B930C' },
 };
 
-export const SIZES: Record<Sizes, number> = {
-	HEIGHT: 600,
-	WIDTH: 400,
-	GAME_WIDTH: 300,
+
+type SIZES_KEYS = 'ROWS' | 'COLS' | 'TILE';
+export const SIZES: Record<SIZES_KEYS, number> = {
+	ROWS: 20,
+	COLS: 10,
 	TILE: 30,
 };

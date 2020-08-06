@@ -9,6 +9,7 @@ const Game: FunctionComponent = () => {
 			const tetris = new Tetris(canvasRef.current);
 			tetris.init();
 			tetris.start();
+			(window as any).tetris = tetris;
 		}
 	}, [canvasRef]);
 

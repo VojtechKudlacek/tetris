@@ -1,10 +1,8 @@
-type BlockTypes = 'I' | 'J' | 'L' | 'O' | 'S' | 'T' | 'Z';
-
-type KnownKeys = 'ARROW_LEFT' | 'ARROW_UP' | 'ARROW_RIGHT' | 'ARROW_DOWN' | 'SPACE';
-
-type Sizes = 'WIDTH' | 'HEIGHT' | 'GAME_WIDTH' | 'TILE';
+type LooseObject<T = any> = { [key: string]: T };
 
 type Shape = Array<Array<number>>;
+
+type Board<T = number> = Array<Array<T>>;
 
 type Color = 'lightBlue' | 'blue' | 'purple' | 'red' | 'orange' | 'yellow' | 'green';
 
@@ -13,4 +11,7 @@ interface ColorSchema {
 	dark: string;
 }
 
-type Board = Array<Array<Color | null>>;
+interface Vector {
+	x: number;
+	y: number;
+}
