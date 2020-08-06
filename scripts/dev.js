@@ -33,7 +33,7 @@ const server = http.Server(app);
 	const serve = async (port = 3000) => {
 		app.use(express.static(path.join(__dirname, '..', 'build')));
 		app.get('*', (_, res) => res.sendFile(path.join(__dirname, '..', 'build', 'index.html')));
-		server.listen(port, () => console.log(`${chalk.cyan('Server is running on port')} ${chalk.green(port.toString())}`));
+		server.listen(port, () => console.log(`${chalk.cyan('Server is running on')} ${chalk.green(`http://localhost:${port.toString()}`)}`));
 	}
 
 	const terminal = readline.createInterface({ input: process.stdin });
