@@ -13,4 +13,4 @@ interface ColorSchema {
 	dark: string;
 }
 
-type Board = Array<Array<Color>>;
+type Board = Array<Array<Color | null>>;

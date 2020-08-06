@@ -3,14 +3,15 @@ import { BLOCKS, KEYS, SIZES, COLORS } from './const';
 import { randomFromTo } from './utils';
 
 class Tetris {
-
+	// Tools
 	private tools: Tools;
-
+	// DOM
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
+	// Render
 	private animating: boolean = false;
+	// Game
 	private field: Board = [];
-
 	private pickerA: Array<Shape> = [];
 	private pickerB: Array<Shape> = [];
 
@@ -27,7 +28,7 @@ class Tetris {
 		this.pickerB = JSON.parse(JSON.stringify(source));
 	}
 
-	private pick(): Shape {
+	private pickRandomShape(): Shape {
 		// Fill pickers if both empty
 		if (!this.pickerA.length && !this.pickerB.length) {
 			this.fillPickers();
@@ -39,12 +40,21 @@ class Tetris {
 		return this.pickerB.splice(randomFromTo(0, this.pickerB.length - 1), 1)[0];
 	}
 
+	private getRandomColor(): Color {
+		const colors = Object.keys(COLORS) as Array<Color>;
+		return colors[randomFromTo(0, colors.length - 1)];
+	}
+
 	private draw(): void {
 		this.tools.setColor('#000000');
 		for (let i = 0; i < this.field.length; i++) { // i = row
 			for (let j = 0; j < this.field[i].length; j++) { // j = col
 				if (this.field[i][j]) {
+					const color = this.field[i][j] as Color;
+					this.tools.setColor(COLORS[color].dark);
 					this.tools.draw(j * SIZES.TILE, i * SIZES.TILE, SIZES.TILE, SIZES.TILE);
+					this.tools.setColor(COLORS[color].light);
+					this.tools.draw(j * SIZES.TILE + 2, i * SIZES.TILE + 2, SIZES.TILE - 4, SIZES.TILE - 4);
 				} else {
 					this.tools.setColor('#012046');
 					this.tools.draw(j * SIZES.TILE + 1, i * SIZES.TILE + 1, SIZES.TILE - 2, SIZES.TILE - 2);
@@ -76,7 +86,11 @@ class Tetris {
 	// EXPOSED
 
 	public init() {
-		this.field = Array(20).fill(null).map(() => Array(10).fill(0));
+		this.field = Array(20).fill(null).map(() => Array(10).fill(null));
+		const color = this.getRandomColor();
+		const shape = this.pickRandomShape().map((row) => row.map((col) => col ? color : null));
+		shape.forEach((row, rowIndex) => row.forEach((col, colIndex) => this.field[rowIndex][colIndex] = col))
+		console.log(shape);
 		this.registerEvents();
 	}
 
