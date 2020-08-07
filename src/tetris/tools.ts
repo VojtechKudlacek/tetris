@@ -20,6 +20,11 @@ class Tools {
 		this.ctx.fillRect(x, y, w, h)
 	}
 
+	public write(x: number, y: number, text: string): void {
+		this.ctx.font = '14px monospace';
+		this.ctx.fillText(text, x, y);
+	}
+
 }
 
 export default Tools;

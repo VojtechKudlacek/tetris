@@ -58,9 +58,10 @@ export const COLORS: Record<Color, ColorSchema> = {
 };
 
 
-type SIZES_KEYS = 'ROWS' | 'COLS' | 'TILE';
+type SIZES_KEYS = 'ROWS' | 'COLS' | 'TILE' | 'SIDEBAR';
 export const SIZES: Record<SIZES_KEYS, number> = {
 	ROWS: 20,
 	COLS: 10,
 	TILE: 30,
+	SIDEBAR: 100,
 };

@@ -1,6 +1,6 @@
 import Tools from './tools';
 import { BLOCKS, KEYS, SIZES, COLORS } from './const';
-import { randomFromTo, createArray, create2DArray } from './utils';
+import { randomFromTo, createArray, create2DArray, getBlockSizes } from './utils';
 
 interface Particle {
 	x: number;
@@ -28,9 +28,12 @@ class Tetris {
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
 	// Current block
-	private currentBlock: Shape | null = null;
-	private currentPos!: Vector;
+	private currentBlock!: Shape;
 	private currentColor!: Color;
+	private currentPos!: Vector;
+	// Next block
+	private nextBlock?: Shape;
+	private nextColor?: Color;
 	// Particles
 	private particles: Array<Particle> = [];
 
@@ -128,36 +131,83 @@ class Tetris {
 		}
 	}
 
+	private replaceCurrentWithNextBlock(): void {
+		this.currentBlock = this.nextBlock as Shape;
+		this.nextBlock = undefined;
+		this.currentColor = this.nextColor as Color;
+		this.nextColor = undefined;
+		this.currentPos = {
+			x: (SIZES.COLS / 2) - Math.floor(this.currentBlock.length),
+			y: -4,
+		}
+		this.checkBlocks(); // To fill the next block
+	}
+
 	private placeBlock(): void {
-		if (this.currentBlock) {
-			for (let i = 0; i < this.currentBlock.length; i++) { // i = row
-				for (let j = 0; j < this.currentBlock[i].length; j++) { // j = col
-					if (this.currentBlock[i][j]) {
-						this.field[i + this.currentPos.y][j + this.currentPos.x] = 1;
-						this.colorField[i + this.currentPos.y][j + this.currentPos.x] = this.currentColor;
-					}
+		for (let i = 0; i < this.currentBlock.length; i++) { // i = row
+			for (let j = 0; j < this.currentBlock[i].length; j++) { // j = col
+				if (this.currentBlock[i][j]) {
+					this.field[i + this.currentPos.y][j + this.currentPos.x] = 1;
+					this.colorField[i + this.currentPos.y][j + this.currentPos.x] = this.currentColor;
 				}
 			}
-			this.checkRows();
 		}
-		this.currentBlock = null;
+		this.checkRows();
+		this.replaceCurrentWithNextBlock();
+	}
+
+	private checkBlocks(): void {
+		if (!this.nextBlock) {
+			this.nextBlock = this.pickRandomBlock();
+			this.nextColor = this.getRandomColor();
+		}
+		if (!this.currentBlock) {
+			this.replaceCurrentWithNextBlock();
+		}
 	}
 
 	private processMove(): void {
-		if (!this.currentBlock) {
-			this.currentBlock = this.pickRandomBlock();
-			this.currentColor = this.getRandomColor();
-			this.currentPos = {
-				x: (SIZES.COLS / 2) - Math.floor(this.currentBlock.length),
-				y: -4,
-			}
+		this.checkBlocks();
+		if (!this.isColiding(this.currentBlock, { x: this.currentPos.x, y: this.currentPos.y + 1 })) {
+			this.currentPos.y++;
 		} else {
-			if (!this.isColiding(this.currentBlock, { x: this.currentPos.x, y: this.currentPos.y + 1 })) {
-				this.currentPos.y++;
-			} else {
-				this.placeBlock();
+			this.placeBlock();
+		}
+	}
+
+	private drawNextBlock(x: number, y: number, drawSize: number): void {
+		if (this.nextBlock) {
+			const padding = 15;
+			const blockSize = getBlockSizes(this.nextBlock);
+			const maxBlockSize = Math.max(blockSize.h, blockSize.w);
+			const minBlockSize = Math.min(blockSize.h, blockSize.w);
+			const tileSize = (drawSize - (padding * 2)) / maxBlockSize;
+			const bonusPadding = (tileSize * (maxBlockSize - minBlockSize)) / 2;
+			const color = this.nextColor as Color;
+			for (let i = 0; i < this.nextBlock.length; i++) {
+				for (let j = 0; j < this.nextBlock[i].length; j++) {
+					if (this.nextBlock[i][j]) {
+						const xPos = (j * tileSize) + x + padding;
+						const yPos = (i * tileSize) + y + padding + bonusPadding;
+						this.tools.setColor(COLORS[color].dark);
+						this.tools.draw(xPos, yPos, tileSize, tileSize);
+						this.tools.setColor(COLORS[color].light);
+						this.tools.draw(xPos + 2, yPos + 2, tileSize - 2, tileSize - 2);
+					}
+				}
 			}
 		}
+	}
+
+	private drawOverlay(): void {
+		const offset = SIZES.COLS * SIZES.TILE;
+		this.tools.setColor('#444444');
+		this.tools.draw(offset, 0, SIZES.SIDEBAR, SIZES.ROWS * SIZES.TILE);
+		this.tools.setColor('#ffffff');
+		this.tools.write(offset + 8, 20, 'NEXT BLOCK');
+		this.tools.setColor('#000000');
+		this.tools.draw(offset + 5, 30, SIZES.SIDEBAR - 10, SIZES.SIDEBAR - 10);
+		this.drawNextBlock(offset + 5, 30, SIZES.SIDEBAR - 10);
 	}
 
 	private draw(): void {
@@ -203,7 +253,8 @@ class Tetris {
 	}
 
 	private render = (delta: number): void => {
-		this.tools.clear(this.canvas.width, this.canvas.height, '#000000');
+		this.tools.clear(SIZES.COLS * SIZES.TILE, SIZES.ROWS * SIZES.TILE, '#000000');
+		this.drawOverlay();
 		this.draw();
 
 		if (delta - this.lastUpdateTime > this.interval) {
@@ -273,6 +324,7 @@ class Tetris {
 	public init() {
 		this.fillField();
 		this.registerEvents();
+		this.drawOverlay();
 	}
 
 	public start() {
