@@ -2,6 +2,26 @@ import Tools from './tools';
 import { BLOCKS, KEYS, SIZES, COLORS } from './const';
 import { randomFromTo, createArray, create2DArray } from './utils';
 
+interface Particle {
+	x: number;
+	y: number;
+	radius: number;
+	vx: number;
+	vy: number;
+	r: number;
+	g: number;
+	b: number;
+}
+
+const createParticle = (x: number, y: number): Particle => ({
+	x, y, radius: 2 + Math.random()*3,
+	vx: -5 + Math.random()*10,
+	vy: -5 + Math.random()*10,
+	r: Math.round(Math.random())*255,
+	g: Math.round(Math.random())*255,
+	b: Math.round(Math.random())*255,
+})
+
 class Tetris {
 	// Tools
 	private tools: Tools;
@@ -22,6 +42,8 @@ class Tetris {
 	private currentBlock: Shape | null = null;
 	private currentPos!: Vector;
 	private currentColor!: Color;
+	// Particles
+	private particles: Array<Particle> = [];
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
@@ -160,6 +182,21 @@ class Tetris {
 				}
 			}
 		}
+		for(let i = 0; i < this.particles.length; i++){
+			const c = this.particles[i];
+			this.ctx.beginPath();
+			this.ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2, false);
+			this.ctx.fillStyle = "rgba("+c.r+", "+c.g+", "+c.b+", 0.5)";
+			this.ctx.fill();
+			c.x += c.vx;
+			c.y += c.vy;
+			c.radius -= .02;
+			if(c.radius < 0) {
+				this.particles.splice(i, 1);
+				i--;
+			}
+		}
+		console.log(this.particles.length);
 	}
 
 	private loop = (delta: number): void => {
@@ -182,11 +219,16 @@ class Tetris {
 	}
 
 	private registerEvents(): void {
+		this.canvas.addEventListener('click', (e) => {
+			for (let i = 0; i < 200; i++) {
+				this.particles.push(createParticle(e.offsetX, e.offsetY));
+			}
+		});
 		window.addEventListener('keyup', (e) => {
 			if (e.keyCode === KEYS.ARROW_DOWN) {
 				this.interval = 200;
 			}
-		})
+		});
 		window.addEventListener('keydown', (e) => {
 			switch (e.keyCode) {
 				case KEYS.ARROW_LEFT:
@@ -225,7 +267,7 @@ class Tetris {
 				default:
 					break
 			}
-		})
+		});
 	}
 
 	// EXPOSED
