@@ -15,7 +15,6 @@ class Tetris {
 	// Tools
 	private tools: Tools;
 	// DOM
-	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 	// Render
 	private animating: boolean = false;
@@ -27,6 +26,7 @@ class Tetris {
 	// Time
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
+	private originalInterval: number = 200;
 	// Current block
 	private currentBlock!: Shape;
 	private currentColor!: Color;
@@ -38,7 +38,6 @@ class Tetris {
 	private particles: Array<Particle> = [];
 
 	constructor(canvas: HTMLCanvasElement) {
-		this.canvas = canvas;
 		this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 		this.tools = new Tools(this.ctx);
 	}
@@ -147,8 +146,12 @@ class Tetris {
 		for (let i = 0; i < this.currentBlock.length; i++) { // i = row
 			for (let j = 0; j < this.currentBlock[i].length; j++) { // j = col
 				if (this.currentBlock[i][j]) {
-					this.field[i + this.currentPos.y][j + this.currentPos.x] = 1;
-					this.colorField[i + this.currentPos.y][j + this.currentPos.x] = this.currentColor;
+					const row = i + this.currentPos.y;
+					if (row < 0) {
+						break;
+					}
+					this.field[row][j + this.currentPos.x] = 1;
+					this.colorField[row][j + this.currentPos.x] = this.currentColor;
 				}
 			}
 		}
@@ -166,8 +169,18 @@ class Tetris {
 		}
 	}
 
+	private checkLoose(): void {
+		for (let i = 0; i < this.field[0].length; i++) {
+			if (this.field[0][i]) {
+				this.restart();
+				break;
+			}
+		}
+	}
+
 	private processMove(): void {
 		this.checkBlocks();
+		this.checkLoose();
 		if (!this.isColiding(this.currentBlock, { x: this.currentPos.x, y: this.currentPos.y + 1 })) {
 			this.currentPos.y++;
 		} else {
@@ -274,8 +287,13 @@ class Tetris {
 
 	private registerEvents(): void {
 		window.addEventListener('keyup', (e) => {
-			if (e.keyCode === KEYS.ARROW_DOWN) {
-				this.interval = 200;
+			switch (e.keyCode) {
+				case KEYS.ARROW_UP:
+				case KEYS.ARROW_DOWN:
+					this.interval = this.originalInterval;
+					break;
+				default:
+					break
 			}
 		});
 		window.addEventListener('keydown', (e) => {
@@ -296,7 +314,7 @@ class Tetris {
 					this.interval = 50;
 					break;
 				case KEYS.ARROW_UP:
-					this.currentPos.y--;
+					this.interval = Infinity;
 					break;
 				case KEYS.SPACE:
 					if (this.currentBlock) {
@@ -321,9 +339,11 @@ class Tetris {
 
 	// EXPOSED
 
-	public init() {
+	public init(withoutEvents = false) {
 		this.fillField();
-		this.registerEvents();
+		if (!withoutEvents) {
+			this.registerEvents();
+		}
 		this.drawOverlay();
 	}
 
@@ -337,7 +357,7 @@ class Tetris {
 	}
 
 	public restart() {
-		// TODO
+		this.init(true);
 	}
 
 }
