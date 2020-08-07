@@ -52,26 +52,50 @@ class Tetris {
 		return colors[randomFromTo(0, colors.length - 1)];
 	}
 
-	private isColiding({ x, y }: Vector): boolean {
-		if (this.currentBlock) {
-			for (let i = 0; i < this.currentBlock.length; i++) { // i = row
-				for (let j = 0; j < this.currentBlock[i].length; j++) { // j = col
-					if (this.currentBlock[i][j]) {
-						if (x + j < 0) {
-							return true;
-						} else if ((x + j) >= SIZES.COLS) {
-							return true;
-						} else if ((y + i) >= SIZES.ROWS) {
-							return true;
-						}
-						if (this.field[y + i] && this.field[y + i][x + j]) {
-							return true;
-						}
+	private rotate(block: Shape): Shape {
+		const newBlock = [];
+		for (let i = 0; i < block[0].length; i++) {
+			let row = block.map(e => e[i]).reverse();
+			newBlock.push(row);
+		}
+		return newBlock;
+	}
+
+	private isColiding(block: Shape, { x, y }: Vector): boolean {
+		for (let i = 0; i < block.length; i++) { // i = row
+			for (let j = 0; j < block[i].length; j++) { // j = col
+				if (block[i][j]) {
+					if (x + j < 0) {
+						return true;
+					} else if ((x + j) >= SIZES.COLS) {
+						return true;
+					} else if ((y + i) >= SIZES.ROWS) {
+						return true;
+					}
+					if (this.field[y + i] && this.field[y + i][x + j]) {
+						return true;
 					}
 				}
 			}
 		}
 		return false;
+	}
+
+	private checkRows(): void {
+		for (let i = 0; i < this.field.length; i++) { // i = row
+			let count = 0;
+			for (let j = 0; j < this.field[i].length; j++) { // j = col
+				if (this.field[i][j]) {
+					count++;
+				}
+			}
+			if (count === SIZES.COLS) {
+				this.field.splice(i, 1);
+				this.field.unshift(Array.from({ length: SIZES.COLS }, () => 0));
+				this.colorField.splice(i, 1);
+				this.colorField.unshift(Array.from({ length: SIZES.COLS }, () => null));
+			}
+		}
 	}
 
 	private placeBlock(): void {
@@ -84,6 +108,7 @@ class Tetris {
 					}
 				}
 			}
+			this.checkRows();
 		}
 		this.currentBlock = null;
 	}
@@ -97,7 +122,7 @@ class Tetris {
 				y: -4,
 			}
 		} else {
-			if (!this.isColiding({ x: this.currentPos.x, y: this.currentPos.y + 1 })) {
+			if (!this.isColiding(this.currentBlock, { x: this.currentPos.x, y: this.currentPos.y + 1 })) {
 				this.currentPos.y++;
 			} else {
 				this.placeBlock();
@@ -157,14 +182,20 @@ class Tetris {
 
 	private registerEvents(): void {
 		window.addEventListener('keydown', (e) => {
-			switch(e.keyCode) {
+			switch (e.keyCode) {
 				case KEYS.ARROW_LEFT:
-					if (!this.isColiding({ x: this.currentPos.x - 1, y: this.currentPos.y })) {
+					if (!this.currentBlock) {
+						break;
+					}
+					if (!this.isColiding(this.currentBlock, { x: this.currentPos.x - 1, y: this.currentPos.y })) {
 						this.currentPos.x--;
 					}
 					break
 				case KEYS.ARROW_RIGHT:
-					if (!this.isColiding({ x: this.currentPos.x + 1, y: this.currentPos.y })) {
+					if (!this.currentBlock) {
+						break;
+					}
+					if (!this.isColiding(this.currentBlock, { x: this.currentPos.x + 1, y: this.currentPos.y })) {
 						this.currentPos.x++;
 					}
 					break;
@@ -173,6 +204,14 @@ class Tetris {
 					break;
 				case KEYS.ARROW_UP:
 					this.currentPos.y--;
+					break;
+				case KEYS.SPACE:
+					if (this.currentBlock) {
+						const newBlock = this.rotate(this.currentBlock);
+						if (!this.isColiding(newBlock, this.currentPos)) {
+							this.currentBlock = newBlock;
+						}
+					}
 					break;
 				case KEYS.P:
 					if (this.animating) {
