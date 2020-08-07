@@ -8,19 +8,8 @@ interface Particle {
 	radius: number;
 	vx: number;
 	vy: number;
-	r: number;
-	g: number;
-	b: number;
+	color: string;
 }
-
-const createParticle = (x: number, y: number): Particle => ({
-	x, y, radius: 2 + Math.random()*3,
-	vx: -5 + Math.random()*10,
-	vy: -5 + Math.random()*10,
-	r: Math.round(Math.random())*255,
-	g: Math.round(Math.random())*255,
-	b: Math.round(Math.random())*255,
-})
 
 class Tetris {
 	// Tools
@@ -104,7 +93,21 @@ class Tetris {
 		return false;
 	}
 
+	private createParticles(x: number, y: number, color: string, amount: number): void {
+		for (let i = 0; i < amount; i++) {
+			this.particles.push({
+				x,
+				y,
+				radius: 2 + Math.random()*3,
+				vx: -5 + Math.random()*10,
+				vy: -5 + Math.random()*10,
+				color,
+			});
+		}
+	}
+
 	private checkRows(): void {
+		const halfTile = Math.floor(SIZES.TILE / 2);
 		for (let i = 0; i < this.field.length; i++) { // i = row
 			let count = 0;
 			for (let j = 0; j < this.field[i].length; j++) { // j = col
@@ -113,6 +116,10 @@ class Tetris {
 				}
 			}
 			if (count === SIZES.COLS) {
+				for (let j = 0; j < SIZES.COLS; j++) {
+					const color = this.colorField[i][j] as Color;
+					this.createParticles((j * SIZES.TILE) + halfTile, (i * SIZES.TILE) + halfTile, COLORS[color].light, 10);
+				}
 				this.field.splice(i, 1);
 				this.field.unshift(createArray<number>(SIZES.COLS, 0));
 				this.colorField.splice(i, 1);
@@ -162,10 +169,7 @@ class Tetris {
 					this.tools.setColor(COLORS[color].dark);
 					this.tools.draw(j * SIZES.TILE, i * SIZES.TILE, SIZES.TILE, SIZES.TILE);
 					this.tools.setColor(COLORS[color].light);
-					this.tools.draw(j * SIZES.TILE + 2, i * SIZES.TILE + 2, SIZES.TILE - 4, SIZES.TILE - 4);
-				} else {
-					this.tools.setColor('#012046');
-					this.tools.draw(j * SIZES.TILE + 1, i * SIZES.TILE + 1, SIZES.TILE - 2, SIZES.TILE - 2);
+					this.tools.draw(j * SIZES.TILE + 2, i * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
 				}
 			}
 		}
@@ -177,30 +181,29 @@ class Tetris {
 						this.tools.setColor(COLORS[this.currentColor].dark);
 						this.tools.draw((this.currentPos.x + j) * SIZES.TILE, (this.currentPos.y + i) * SIZES.TILE, SIZES.TILE, SIZES.TILE);
 						this.tools.setColor(COLORS[this.currentColor].light);
-						this.tools.draw((this.currentPos.x + j) * SIZES.TILE + 2, (this.currentPos.y + i) * SIZES.TILE + 2, SIZES.TILE - 4, SIZES.TILE - 4);
+						this.tools.draw((this.currentPos.x + j) * SIZES.TILE + 2, (this.currentPos.y + i) * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
 					}
 				}
 			}
 		}
 		for(let i = 0; i < this.particles.length; i++){
-			const c = this.particles[i];
+			const particle = this.particles[i];
 			this.ctx.beginPath();
-			this.ctx.arc(c.x, c.y, c.radius, 0, Math.PI*2, false);
-			this.ctx.fillStyle = "rgba("+c.r+", "+c.g+", "+c.b+", 0.5)";
+			this.ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI*2, false);
+			this.ctx.fillStyle = particle.color;
 			this.ctx.fill();
-			c.x += c.vx;
-			c.y += c.vy;
-			c.radius -= .02;
-			if(c.radius < 0) {
+			particle.x += particle.vx;
+			particle.y += particle.vy;
+			particle.radius -= .02;
+			if(particle.radius < 0) {
 				this.particles.splice(i, 1);
 				i--;
 			}
 		}
-		console.log(this.particles.length);
 	}
 
-	private loop = (delta: number): void => {
-		this.tools.clear(this.canvas.width, this.canvas.height, '#00040B');
+	private render = (delta: number): void => {
+		this.tools.clear(this.canvas.width, this.canvas.height, '#000000');
 		this.draw();
 
 		if (delta - this.lastUpdateTime > this.interval) {
@@ -209,7 +212,7 @@ class Tetris {
 		}
 
 		if (this.animating) {
-			requestAnimationFrame(this.loop)
+			requestAnimationFrame(this.render)
 		}
 	}
 
@@ -219,11 +222,6 @@ class Tetris {
 	}
 
 	private registerEvents(): void {
-		this.canvas.addEventListener('click', (e) => {
-			for (let i = 0; i < 200; i++) {
-				this.particles.push(createParticle(e.offsetX, e.offsetY));
-			}
-		});
 		window.addEventListener('keyup', (e) => {
 			if (e.keyCode === KEYS.ARROW_DOWN) {
 				this.interval = 200;
@@ -279,7 +277,7 @@ class Tetris {
 
 	public start() {
 		this.animating = true;
-		requestAnimationFrame(this.loop);
+		requestAnimationFrame(this.render);
 	}
 
 	public stop() {
