@@ -1,6 +1,6 @@
 import Tools from './tools';
 import { BLOCKS, KEYS, SIZES, COLORS } from './const';
-import { randomFromTo } from './utils';
+import { randomFromTo, createArray, create2DArray } from './utils';
 
 class Tetris {
 	// Tools
@@ -17,6 +17,7 @@ class Tetris {
 	private pickerB: Array<Shape> = [];
 	// Time
 	private lastUpdateTime: number = 0;
+	private interval: number = 200;
 	// Current block
 	private currentBlock: Shape | null = null;
 	private currentPos!: Vector;
@@ -91,9 +92,9 @@ class Tetris {
 			}
 			if (count === SIZES.COLS) {
 				this.field.splice(i, 1);
-				this.field.unshift(Array.from({ length: SIZES.COLS }, () => 0));
+				this.field.unshift(createArray<number>(SIZES.COLS, 0));
 				this.colorField.splice(i, 1);
-				this.colorField.unshift(Array.from({ length: SIZES.COLS }, () => null));
+				this.colorField.unshift(createArray<null>(SIZES.COLS, null));
 			}
 		}
 	}
@@ -165,7 +166,7 @@ class Tetris {
 		this.tools.clear(this.canvas.width, this.canvas.height, '#00040B');
 		this.draw();
 
-		if (delta - this.lastUpdateTime > 200) {
+		if (delta - this.lastUpdateTime > this.interval) {
 			this.processMove();
 			this.lastUpdateTime = delta;
 		}
@@ -176,31 +177,32 @@ class Tetris {
 	}
 
 	private fillField(): void {
-		this.field = Array.from({ length: SIZES.ROWS }, () => Array.from({ length: SIZES.COLS }, () => 0));
-		this.colorField = Array.from({ length: SIZES.ROWS }, () => Array.from({ length: SIZES.COLS }, () => null));
+		this.field = create2DArray<number>(SIZES.ROWS, SIZES.COLS, 0);
+		this.colorField = create2DArray<null>(SIZES.ROWS, SIZES.COLS, null);
 	}
 
 	private registerEvents(): void {
+		window.addEventListener('keyup', (e) => {
+			if (e.keyCode === KEYS.ARROW_DOWN) {
+				this.interval = 200;
+			}
+		})
 		window.addEventListener('keydown', (e) => {
 			switch (e.keyCode) {
 				case KEYS.ARROW_LEFT:
-					if (!this.currentBlock) {
-						break;
-					}
+					if (!this.currentBlock) { break; }
 					if (!this.isColiding(this.currentBlock, { x: this.currentPos.x - 1, y: this.currentPos.y })) {
 						this.currentPos.x--;
 					}
 					break
 				case KEYS.ARROW_RIGHT:
-					if (!this.currentBlock) {
-						break;
-					}
+					if (!this.currentBlock) { break; }
 					if (!this.isColiding(this.currentBlock, { x: this.currentPos.x + 1, y: this.currentPos.y })) {
 						this.currentPos.x++;
 					}
 					break;
 				case KEYS.ARROW_DOWN:
-					this.currentPos.y++;
+					this.interval = 50;
 					break;
 				case KEYS.ARROW_UP:
 					this.currentPos.y--;
