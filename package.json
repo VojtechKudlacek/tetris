@@ -18,6 +18,8 @@
     "dotenv": "^8.2.0",
     "esbuild": "^0.6.16",
     "express": "^4.17.1",
+    "overmind": "^25.0.1",
+    "overmind-react": "^26.0.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },

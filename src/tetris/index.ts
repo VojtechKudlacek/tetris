@@ -135,9 +135,10 @@ class Tetris {
 		this.nextBlock = undefined;
 		this.currentColor = this.nextColor as Color;
 		this.nextColor = undefined;
+		const sizes = getBlockSizes(this.currentBlock);
 		this.currentPos = {
-			x: (SIZES.COLS / 2) - Math.floor(this.currentBlock.length),
-			y: -4,
+			x: (SIZES.COLS / 2) - Math.floor(Math.max(sizes.w, sizes.h)),
+			y: -3,
 		}
 		this.checkBlocks(); // To fill the next block
 	}

@@ -1,9 +1,11 @@
 import React, { FunctionComponent, useEffect, useRef, RefObject } from 'react';
 import Tetris from 'tetris';
+import { useStore } from 'store';
 
 const Game: FunctionComponent = () => {
 	const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
-
+	const store = useStore();
+	console.log(store);
 	useEffect(() => {
 		if (canvasRef.current) {
 			const tetris = new Tetris(canvasRef.current);

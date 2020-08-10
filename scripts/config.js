@@ -13,7 +13,8 @@ const createConfig = (env = 'development') => {
 		minify: isProd ? true : false,
 		bundle: true,
 		define: {
-			'process.env.NODE_ENV': `"${env}"` // Quotes because it will be replace with string
+			'process.env.NODE_ENV': `"${env}"`, // Quotes because it will be replace with string
+			'process': 'undefined'
 		}
 	}
 }
