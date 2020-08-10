@@ -1,11 +1,13 @@
 const esbuild = require('esbuild');
 const chalk = require('chalk');
+const utils = require('./utils');
 const buildOptions = require('./config')('production');
 
 (async () => {
 	try {
 		const t = Date.now();
 		console.log(chalk.green('Building...'));
+		utils.copyDir('./public', './build');
 		const { warnings } = await esbuild.build(buildOptions);
 		if (warnings.length) {
 			for (const warning of warnings) {
