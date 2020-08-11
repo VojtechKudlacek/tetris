@@ -1,44 +1,79 @@
-type BLOCKS_KEYS = 'I' | 'J' | 'L' | 'O' | 'S' | 'T' | 'Z';
-export const BLOCKS: Record<BLOCKS_KEYS, Shape> = {
-	I: [
-		[0, 0, 0, 0],
-		[1, 1, 1, 1],
-		[0, 0, 0, 0],
-		[0, 0, 0, 0]
-	],
-	J: [
-		[1, 0, 0],
-		[1, 1, 1],
-		[0, 0, 0]
-	],
-	L: [
-		[0, 0, 1],
-		[1, 1, 1],
-		[0, 0, 0]
-	],
-	O: [
-		[1, 1],
-		[1, 1]
-	],
-	S: [
-		[0, 1, 1],
-		[1, 1, 0],
-		[0, 0, 0]
-	],
-	T: [
-		[0, 1, 0],
-		[1, 1, 1],
-		[0, 0, 0]
-	],
-	Z: [
-		[1, 1, 0],
-		[0, 1, 1],
-		[0, 0, 0]
-	]
-};
+import Block from 'tetris/block';
 
-type KEYS_KEYS = 'ARROW_LEFT' | 'ARROW_UP' | 'ARROW_RIGHT' | 'ARROW_DOWN' | 'SPACE' | 'P';
-export const KEYS: Record<KEYS_KEYS, number> = {
+export const BLOCKS: Array<Block> = [
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[0, 0, 0, 0],
+			[1, 1, 1, 1],
+			[0, 0, 0, 0],
+			[0, 0, 0, 0]
+		],
+		color: { light: '', dark: '' }
+	}),
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[1, 0, 0],
+			[1, 1, 1],
+			[0, 0, 0]
+		],
+		color: { light: '', dark: '' }
+	}),
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[0, 0, 1],
+			[1, 1, 1],
+			[0, 0, 0]
+		],
+		color: { light: '', dark: '' }
+	}),
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[1, 1],
+			[1, 1]
+		],
+		color: { light: '', dark: '' }
+	}),
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[0, 1, 1],
+			[1, 1, 0],
+			[0, 0, 0]
+		],
+		color: { light: '', dark: '' }
+	}),
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[0, 1, 0],
+			[1, 1, 1],
+			[0, 0, 0]
+		],
+		color: { light: '', dark: '' }
+	}),
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		value: [
+			[1, 1, 0],
+			[0, 1, 1],
+			[0, 0, 0]
+		],
+		color: { light: '', dark: '' }
+	})
+];
+
+export const KEYS = {
 	ARROW_LEFT: 37,
 	ARROW_UP: 38,
 	ARROW_RIGHT: 39,
@@ -47,7 +82,7 @@ export const KEYS: Record<KEYS_KEYS, number> = {
 	P: 80,
 };
 
-export const COLORS: Record<Color, ColorSchema> = {
+export const COLORS = {
 	lightBlue: { light: '#99E5E3', dark: '#3DB5F3' },
 	blue: { light: '#5099E7', dark: '#104F9C' },
 	purple: { light: '#D5A8EA', dark: '#8419B3' },
@@ -57,9 +92,7 @@ export const COLORS: Record<Color, ColorSchema> = {
 	green: { light: '#CCE900', dark: '#2B930C' },
 };
 
-
-type SIZES_KEYS = 'ROWS' | 'COLS' | 'TILE' | 'SIDEBAR';
-export const SIZES: Record<SIZES_KEYS, number> = {
+export const SIZES = {
 	ROWS: 20,
 	COLS: 10,
 	TILE: 30,

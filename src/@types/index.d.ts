@@ -20,3 +20,5 @@ interface Size {
 	w: number;
 	h: number;
 }
+
+type BlockValue = Array<Array<number>>;
