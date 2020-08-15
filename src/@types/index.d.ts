@@ -1,12 +1,6 @@
-type LooseObject<T = any> = { [key: string]: T };
+type Field<T = number> = Array<Array<T>>;
 
-type Shape = Array<Array<number>>;
-
-type Board<T = number> = Array<Array<T>>;
-
-type Color = 'lightBlue' | 'blue' | 'purple' | 'red' | 'orange' | 'yellow' | 'green';
-
-interface ColorSchema {
+interface Color {
 	light: string;
 	dark: string;
 }
@@ -21,4 +15,9 @@ interface Size {
 	h: number;
 }
 
-type BlockValue = Array<Array<number>>;
+interface Particle extends Vector {
+	vx: number;
+	vy: number;
+	radius: number;
+	color: string;
+}

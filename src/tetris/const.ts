@@ -1,100 +1,128 @@
 import Block from 'tetris/block';
 
-export const BLOCKS: Array<Block> = [
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[0, 0, 0, 0],
-			[1, 1, 1, 1],
-			[0, 0, 0, 0],
-			[0, 0, 0, 0]
-		],
-		color: { light: '', dark: '' }
-	}),
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[1, 0, 0],
-			[1, 1, 1],
-			[0, 0, 0]
-		],
-		color: { light: '', dark: '' }
-	}),
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[0, 0, 1],
-			[1, 1, 1],
-			[0, 0, 0]
-		],
-		color: { light: '', dark: '' }
-	}),
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[1, 1],
-			[1, 1]
-		],
-		color: { light: '', dark: '' }
-	}),
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[0, 1, 1],
-			[1, 1, 0],
-			[0, 0, 0]
-		],
-		color: { light: '', dark: '' }
-	}),
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[0, 1, 0],
-			[1, 1, 1],
-			[0, 0, 0]
-		],
-		color: { light: '', dark: '' }
-	}),
-	new Block({
-		minSize: 1,
-		maxSize: 4,
-		value: [
-			[1, 1, 0],
-			[0, 1, 1],
-			[0, 0, 0]
-		],
-		color: { light: '', dark: '' }
-	})
-];
-
-export const KEYS = {
-	ARROW_LEFT: 37,
-	ARROW_UP: 38,
-	ARROW_RIGHT: 39,
-	ARROW_DOWN: 40,
-	SPACE: 32,
-	P: 80,
+type ColorOptions = 'BLUE' | 'GREEN' | 'LIGHT_BLUE' | 'ORANGE' | 'PURPLE' | 'RED' | 'YELLOW';
+export const COLORS: Record<ColorOptions, Color> = {
+	BLUE: { light: '#5099E7', dark: '#104F9C' },
+	GREEN: { light: '#CCE900', dark: '#2B930C' },
+	LIGHT_BLUE: { light: '#99E5E3', dark: '#3DB5F3' },
+	ORANGE: { light: '#E9AB00', dark: '#CD5E02' },
+	PURPLE: { light: '#D5A8EA', dark: '#8419B3' },
+	RED: { light: '#E18700', dark: '#A32109' },
+	YELLOW: { light: '#EFD76B', dark: '#EEA73C' },
 };
 
-export const COLORS = {
-	lightBlue: { light: '#99E5E3', dark: '#3DB5F3' },
-	blue: { light: '#5099E7', dark: '#104F9C' },
-	purple: { light: '#D5A8EA', dark: '#8419B3' },
-	red: { light: '#E18700', dark: '#A32109' },
-	orange: { light: '#E9AB00', dark: '#CD5E02' },
-	yellow: { light: '#EFD76B', dark: '#EEA73C' },
-	green: { light: '#CCE900', dark: '#2B930C' },
+export const KEYS = {
+	LEFT: 37,
+	UP: 38,
+	RIGHT: 39,
+	DOWN: 40,
+	SPACE: 32,
+	P: 80,
+	A: 65,
+	S: 83,
 };
 
 export const SIZES = {
 	ROWS: 20,
 	COLS: 10,
 	TILE: 30,
+	HALF_TILE: 15,
 	SIDEBAR: 100,
+	FIELD_WIDTH: 300,
+	WIDTH: 400,
+	HEIGHT: 600,
 };
+
+export const BLOCKS: Array<Block> = [
+	new Block({
+		minSize: 1,
+		maxSize: 4,
+		tiles: 4,
+		defaultX: (SIZES.COLS / 2) - 2,
+		defaultY: -2,
+		value: [
+			[0, 0, 0, 0],
+			[1, 1, 1, 1],
+			[0, 0, 0, 0],
+			[0, 0, 0, 0]
+		],
+		color: COLORS.BLUE
+	}),
+	new Block({
+		minSize: 2,
+		maxSize: 3,
+		tiles: 3,
+		defaultX: (SIZES.COLS / 2) - 1,
+		defaultY: -2,
+		value: [
+			[1, 0, 0],
+			[1, 1, 1],
+			[0, 0, 0]
+		],
+		color: COLORS.GREEN
+	}),
+	new Block({
+		minSize: 2,
+		maxSize: 3,
+		tiles: 3,
+		defaultX: (SIZES.COLS / 2) - 1,
+		defaultY: -2,
+		value: [
+			[0, 0, 1],
+			[1, 1, 1],
+			[0, 0, 0]
+		],
+		color: COLORS.LIGHT_BLUE
+	}),
+	new Block({
+		minSize: 2,
+		maxSize: 2,
+		tiles: 2,
+		defaultX: (SIZES.COLS / 2) - 1,
+		defaultY: -2,
+		value: [
+			[1, 1],
+			[1, 1]
+		],
+		color: COLORS.ORANGE
+	}),
+	new Block({
+		minSize: 2,
+		maxSize: 3,
+		tiles: 3,
+		defaultX: (SIZES.COLS / 2) - 1,
+		defaultY: -2,
+		value: [
+			[0, 1, 1],
+			[1, 1, 0],
+			[0, 0, 0]
+		],
+		color: COLORS.PURPLE
+	}),
+	new Block({
+		minSize: 2,
+		maxSize: 3,
+		tiles: 3,
+		defaultX: (SIZES.COLS / 2) - 1,
+		defaultY: -2,
+		value: [
+			[0, 1, 0],
+			[1, 1, 1],
+			[0, 0, 0]
+		],
+		color: COLORS.RED
+	}),
+	new Block({
+		minSize: 2,
+		maxSize: 3,
+		tiles: 3,
+		defaultX: (SIZES.COLS / 2) - 1,
+		defaultY: -2,
+		value: [
+			[1, 1, 0],
+			[0, 1, 1],
+			[0, 0, 0]
+		],
+		color: COLORS.YELLOW
+	})
+];
