@@ -13,7 +13,9 @@ class Block implements Vector {
 	public minSize: number;
 	public maxSize: number;
 	public tiles: number;
+
 	public value: Array<Array<number>>;
+	public preview: Array<Array<number>>;
 	public color: Color;
 
 	public defaultX: number;
@@ -29,8 +31,9 @@ class Block implements Vector {
 		this.minSize = props.minSize;
 		this.maxSize = props.maxSize;
 		this.tiles = props.tiles;
-		this.value = props.value;
 		this.color = props.color;
+		this.value = props.value;
+		this.preview = this.value.filter((row) => row.includes(1));
 	}
 
 	public rotateLeft(): void {

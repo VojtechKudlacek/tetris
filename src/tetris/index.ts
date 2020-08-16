@@ -211,12 +211,13 @@ class Tetris {
 			// Fill are with black color
 			Tools.fill(ctx, w, h, '#000000');
 			// Draw the next block
-			const drawTileSize = (SIZES.NEXT_BLOCK_AREA - (SIZES.NEXT_BLOCK_AREA_PADDING * 2)) / 4; // 4 = largest block
-			const horizontalPadding = ((drawTileSize * (this.nextBlock.tiles - this.nextBlock.minSize)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
-			const verticalPadding = ((drawTileSize * (this.nextBlock.tiles - this.nextBlock.maxSize)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
-			for (let row = 0; row < this.nextBlock.tiles; row++) {
-				for (let col = 0; col < this.nextBlock.tiles; col++) {
-					if (this.nextBlock.value[row][col]) {
+			const drawTileSize = (SIZES.NEXT_BLOCK_AREA - (SIZES.NEXT_BLOCK_AREA_PADDING * 2)) / SIZES.NEXT_BLOCK_ARE_TILE_COUNT;
+			// This is a bit of a hack, since all of the blocks are always vertically longer than horizontally
+			const horizontalPadding = ((drawTileSize * (SIZES.NEXT_BLOCK_ARE_TILE_COUNT - this.nextBlock.preview[0].length)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
+			const verticalPadding = ((drawTileSize * (SIZES.NEXT_BLOCK_ARE_TILE_COUNT - this.nextBlock.preview.length)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
+			for (let row = 0; row < this.nextBlock.preview.length; row++) {
+				for (let col = 0; col < this.nextBlock.preview[0].length; col++) {
+					if (this.nextBlock.preview[row][col]) {
 						const x = (col * drawTileSize) + horizontalPadding;
 						const y = (row * drawTileSize) + verticalPadding;
 						Tools.drawBlock(ctx, x, y, this.nextBlock.color, drawTileSize);
