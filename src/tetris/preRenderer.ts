@@ -23,9 +23,9 @@ class PreRenderer {
 		this.ctx.clearRect(0, 0, this.width, this.height);
 	}
 
-	public draw(fn: (ctx: CanvasRenderingContext2D) => void): void {
+	public draw(fn: (ctx: CanvasRenderingContext2D, width: number, height: number) => void): void {
 		this.clear();
-		fn(this.ctx)
+		fn(this.ctx, this.width, this.height);
 	}
 
 	public get() {

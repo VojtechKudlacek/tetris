@@ -1,16 +1,14 @@
 import Tools from './tools';
-// import PreRenderer from './prerenderer';
+import PreRenderer from './preRenderer';
 import Block from './block';
 import { BLOCKS, KEYS, SIZES } from './const';
 import { randomFromTo, createArray, create2DArray } from './utils';
 
 class Tetris {
-	// Tools
-	private tools: Tools;
 	// PreRenderers
-	// private menuPreRenderer: PreRenderer;
-	// private gamePreRenderer: PreRenderer;
-	// private nextBlockPreRenderer: PreRenderer;
+	// private menuPreRenderer: PreRenderer; // Menu screen
+	private gamePreRenderer: PreRenderer; // Field with placed blocks + sidebar
+	private nextBlockPreRenderer: PreRenderer; // Next block area
 	// DOM
 	private ctx: CanvasRenderingContext2D;
 	// Render
@@ -32,7 +30,9 @@ class Tetris {
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
-		this.tools = new Tools(this.ctx);
+		// this.menuPreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
+		this.gamePreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
+		this.nextBlockPreRenderer = new PreRenderer({ height: SIZES.NEXT_BLOCK_AREA, width: SIZES.NEXT_BLOCK_AREA });
 	}
 
 	private fillPicker(): void {
@@ -46,7 +46,7 @@ class Tetris {
 			this.fillPicker();
 		}
 		// Remove one block from the picker and return it
-		return this.picker.splice(randomFromTo(0, this.picker.length - 1), 1)[0];
+		return this.picker.splice(randomFromTo(0, this.picker.length - 1, true), 1)[0];
 	}
 
 	private isColiding(block: Block, { x, y }: Vector): boolean {
@@ -55,9 +55,9 @@ class Tetris {
 				if (block.value[row][col]) { // If block has value at current iterated position
 					if (x + col < 0) { // If block is offscreen (left)
 						return true;
-					} else if ((x + col) >= SIZES.COLS) { // If block is offscreen (right)
+					} else if ((x + col) >= SIZES.COL_COUNT) { // If block is offscreen (right)
 						return true;
-					} else if ((y + row) >= SIZES.ROWS) { // If block is offscreen (bottom)
+					} else if ((y + row) >= SIZES.ROW_COUNT) { // If block is offscreen (bottom)
 						return true;
 					}
 					if (this.field[y + row] && this.field[y + row][x + col]) { // If block coliding with another placed block
@@ -71,31 +71,31 @@ class Tetris {
 
 	private createParticles(x: number, y: number, color: string, amount: number): void {
 		for (let i = 0; i < amount; i++) {
-			this.particles.push({ x, y, radius: randomFromTo(2, 5, false), vx: randomFromTo(-5, 5, false), vy: randomFromTo(-5, 5, false), color });
+			this.particles.push({ x, y, radius: randomFromTo(2, 5), vx: randomFromTo(-5, 5), vy: randomFromTo(-5, 5), color });
 		}
 	}
 
 	private checFilledkRows(): void {
 		let cleared = 0;
 		let score = 0;
-		for (let row = 0; row < this.field.length; row++) {
+		for (let row = 0; row < SIZES.ROW_COUNT; row++) {
 			let count = 0;
-			for (let col = 0; col < this.field[row].length; col++) {
+			for (let col = 0; col < SIZES.COL_COUNT; col++) {
 				if (this.field[row][col]) {
 					count++;
 				}
 			}
-			if (count === SIZES.COLS) {
+			if (count === SIZES.COL_COUNT) {
 				cleared++;
 				score += (cleared * 10);
-				for (let col = 0; col < SIZES.COLS; col++) {
+				for (let col = 0; col < SIZES.COL_COUNT; col++) {
 					const color = this.colorField[row][col] as Color;
 					this.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color.light, cleared * 10);
 				}
 				this.field.splice(row, 1);
-				this.field.unshift(createArray<number>(SIZES.COLS, 0));
+				this.field.unshift(createArray<number>(SIZES.COL_COUNT, 0));
 				this.colorField.splice(row, 1);
-				this.colorField.unshift(createArray<null>(SIZES.COLS, null));
+				this.colorField.unshift(createArray<null>(SIZES.COL_COUNT, null));
 			}
 		}
 		this.score += score;
@@ -128,86 +128,26 @@ class Tetris {
 				}
 			}
 		}
-		this.checFilledkRows();
-		this.checkLoose();
-		this.replaceCurrentWithNextBlock();
 	}
+
+	// Game processing
 
 	private processMove(): void {
 		if (!this.isColiding(this.currentBlock, { x: this.currentBlock.x, y: this.currentBlock.y + 1 })) {
 			this.currentBlock.setY(this.currentBlock.y + 1);
 		} else {
 			this.placeBlock();
+			this.checFilledkRows();
+			this.checkLoose();
+			this.replaceCurrentWithNextBlock();
+			this.preDrawGame();
+			this.preDrawNextBlock();
 		}
 	}
 
-	private drawNextBlock(x: number, y: number, drawSize: number): void {
-		// TODO: Add to prerenderer
-		if (this.nextBlock) {
-			const padding = 15;
-			const drawTileSize = (drawSize - (padding * 2)) / this.nextBlock.maxSize;
-			const bonusPadding = (drawTileSize * (this.nextBlock.maxSize - this.nextBlock.minSize)) / 2;
-			for (let row = 0; row < this.nextBlock.tiles; row++) {
-				for (let col = 0; col < this.nextBlock.tiles; col++) {
-					if (this.nextBlock.value[row][col]) {
-						const xPos = (col * drawTileSize) + x + padding;
-						const yPos = (row * drawTileSize) + y + padding + bonusPadding;
-						this.tools.setColor(this.nextBlock.color.dark);
-						this.tools.draw(xPos, yPos, drawTileSize, drawTileSize);
-						this.tools.setColor(this.nextBlock.color.light);
-						this.tools.draw(xPos + 2, yPos + 2, drawTileSize - 2, drawTileSize - 2);
-					}
-				}
-			}
-		}
-	}
-
-	private drawOverlay(): void {
-		// TODO: Add to prerenderer
-		const offset = SIZES.COLS * SIZES.TILE;
-		this.tools.setColor('#444444');
-		this.tools.draw(offset, 0, SIZES.SIDEBAR, SIZES.ROWS * SIZES.TILE);
-		this.tools.setColor('#ffffff');
-		this.tools.write(offset + 8, 20, 'NEXT BLOCK');
-		this.tools.write(offset + 8, 140, 'SCORE');
-		this.tools.write(offset + 8, 160, String(this.score));
-		this.tools.setColor('#000000');
-		this.tools.draw(offset + 5, 30, SIZES.SIDEBAR - 10, SIZES.SIDEBAR - 10);
-		this.drawNextBlock(offset + 5, 30, SIZES.SIDEBAR - 10);
-	}
-
-	private draw(): void {
-		this.tools.setColor('#000000');
-		for (let row = 0; row < this.field.length; row++) {
-			for (let col = 0; col < this.field[row].length; col++) {
-				if (this.field[row][col]) {
-					const color = this.colorField[row][col] as Color;
-					this.tools.setColor(color.dark);
-					this.tools.draw(col * SIZES.TILE, row * SIZES.TILE, SIZES.TILE, SIZES.TILE);
-					this.tools.setColor(color.light);
-					this.tools.draw(col * SIZES.TILE + 2, row * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
-				}
-			}
-		}
-		if (this.currentBlock) {
-			for (let row = 0; row < this.currentBlock.tiles; row++) { // i = row
-				for (let col = 0; col < this.currentBlock.tiles; col++) { // j = col
-					const isSolid = this.currentBlock.value[row][col];
-					if (isSolid) {
-						this.tools.setColor(this.currentBlock.color.dark);
-						this.tools.draw((this.currentBlock.x + col) * SIZES.TILE, (this.currentBlock.y + row) * SIZES.TILE, SIZES.TILE, SIZES.TILE);
-						this.tools.setColor(this.currentBlock.color.light);
-						this.tools.draw((this.currentBlock.x + col) * SIZES.TILE + 2, (this.currentBlock.y + row) * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
-					}
-				}
-			}
-		}
+	private processParticles(): void {
 		for(let i = 0; i < this.particles.length; i++){
 			const particle = this.particles[i];
-			this.ctx.beginPath();
-			this.ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI*2, false);
-			this.ctx.fillStyle = particle.color;
-			this.ctx.fill();
 			particle.x += particle.vx;
 			particle.y += particle.vy;
 			particle.radius -= .02;
@@ -218,19 +158,105 @@ class Tetris {
 		}
 	}
 
-	private render = (delta: number): void => {
-		this.tools.clear(SIZES.COLS * SIZES.TILE, SIZES.ROWS * SIZES.TILE, '#000000');
-		this.drawOverlay();
-		this.draw();
+	// Drawing
 
+	private drawCurrentBlock(): void {
+		for (let row = 0; row < this.currentBlock.tiles; row++) {
+			for (let col = 0; col < this.currentBlock.tiles; col++) {
+				const isSolid = this.currentBlock.value[row][col];
+				if (isSolid) {
+					Tools.drawBlock(this.ctx, (this.currentBlock.x + col) * SIZES.TILE, (this.currentBlock.y + row) * SIZES.TILE, this.currentBlock.color);
+				}
+			}
+		}
+	}
+
+	private drawParticles(): void {
+		for(let i = 0; i < this.particles.length; i++){
+			const particle = this.particles[i];
+			this.ctx.beginPath();
+			this.ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI*2, false);
+			this.ctx.fillStyle = particle.color;
+			this.ctx.fill();
+		}
+	}
+
+	private preDrawGame(): void {
+		this.gamePreRenderer.draw((ctx, w, h) => {
+			// Fill are with black color
+			Tools.fill(ctx, w, h, '#000000');
+			// Draw filled blocks with its color
+			for (let row = 0; row < SIZES.ROW_COUNT; row++) {
+				for (let col = 0; col < SIZES.COL_COUNT; col++) {
+					if (this.field[row][col]) {
+						const color = this.colorField[row][col] as Color;
+						Tools.drawBlock(ctx, col * SIZES.TILE, row * SIZES.TILE, color);
+					}
+				}
+			}
+			// Draw sidebar
+			Tools.drawRect(ctx, SIZES.FIELD_WIDTH, 0, SIZES.SIDEBAR, SIZES.GAME_HEIGHT, '#111111');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 8, 20, 'NEXT BLOCK', '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 8, 140, 'SCORE', '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 8, 160, String(this.score), '#ffffff');
+		});
+	}
+
+	private preDrawNextBlock(): void {
+		this.nextBlockPreRenderer.draw((ctx, w, h) => {
+			// Fill are with black color
+			Tools.fill(ctx, w, h, '#000000');
+			// Draw the next block
+			const drawTileSize = (SIZES.NEXT_BLOCK_AREA - (SIZES.NEXT_BLOCK_AREA_PADDING * 2)) / 4; // 4 = largest block
+			const horizontalPadding = ((drawTileSize * (this.nextBlock.tiles - this.nextBlock.minSize)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
+			const verticalPadding = ((drawTileSize * (this.nextBlock.tiles - this.nextBlock.maxSize)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
+			for (let row = 0; row < this.nextBlock.tiles; row++) {
+				for (let col = 0; col < this.nextBlock.tiles; col++) {
+					if (this.nextBlock.value[row][col]) {
+						const x = (col * drawTileSize) + horizontalPadding;
+						const y = (row * drawTileSize) + verticalPadding;
+						Tools.drawBlock(ctx, x, y, this.nextBlock.color, drawTileSize);
+					}
+				}
+			}
+		})
+	}
+
+	/**
+	 * Rendering
+	 */
+	private render(): void {
+		// Draw game
+		Tools.drawPreRender(this.ctx, this.gamePreRenderer.get(), 0, 0);
+		// Draw next block
+		Tools.drawPreRender(this.ctx, this.nextBlockPreRenderer.get(), SIZES.FIELD_WIDTH + 5, 30);
+		// Draw current block
+		this.drawCurrentBlock();
+		// Draw particles
+		this.drawParticles();
+	}
+
+	/**
+	 * Game processing
+	 */
+	private process(delta: number): void {
+		this.processParticles();
 		if (delta - this.lastUpdateTime > this.interval) {
 			this.processMove();
 			this.lastUpdateTime = delta;
 		}
+	}
 
+	/**
+	 * Game loop
+	 * @param delta Time spent in game
+	 */
+	private loop = (delta: number): void => {
 		if (this.animating) {
-			requestAnimationFrame(this.render)
+			this.render();
+			this.process(delta);
 		}
+		requestAnimationFrame(this.loop)
 	}
 
 	private registerEvents(): void {
@@ -244,7 +270,11 @@ class Tetris {
 					break
 			}
 		});
+
 		window.addEventListener('keydown', (e) => {
+			if (!this.animating && e.keyCode !== KEYS.P) {
+				return;
+			}
 			switch (e.keyCode) {
 				case KEYS.LEFT:
 					if (!this.isColiding(this.currentBlock, { x: this.currentBlock.x - 1, y: this.currentBlock.y })) {
@@ -282,7 +312,7 @@ class Tetris {
 				}
 				case KEYS.P:
 					if (this.animating) {
-						this.stop();
+						this.pause();
 					} else {
 						this.start();
 					}
@@ -293,32 +323,35 @@ class Tetris {
 		});
 	}
 
-	// EXPOSED
-
-	public init(withoutEvents = false) {
+	private gameSetup(): void {
 		this.score = 0;
-		this.field = create2DArray<number>(SIZES.ROWS, SIZES.COLS, 0);
-		this.colorField = create2DArray<null>(SIZES.ROWS, SIZES.COLS, null);
+		this.field = create2DArray<number>(SIZES.ROW_COUNT, SIZES.COL_COUNT, 0);
+		this.colorField = create2DArray<null>(SIZES.ROW_COUNT, SIZES.COL_COUNT, null);
 		this.fillPicker();
 		this.nextBlock = this.pickRandomBlock();
 		this.currentBlock = this.pickRandomBlock();
-		if (!withoutEvents) {
-			this.registerEvents();
-		}
-		this.drawOverlay();
+		this.preDrawGame();
+		this.preDrawNextBlock();
 	}
 
-	public start() {
+	// EXPOSED
+
+	public init(): void {
+		this.gameSetup();
+		this.registerEvents();
+		requestAnimationFrame(this.loop);
+	}
+
+	public start(): void {
 		this.animating = true;
-		requestAnimationFrame(this.render);
 	}
 
-	public stop() {
+	public pause(): void {
 		this.animating = false;
 	}
 
-	public restart() {
-		this.init(true);
+	public restart(): void {
+		this.gameSetup();
 	}
 
 }

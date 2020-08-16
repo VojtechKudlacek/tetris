@@ -23,14 +23,16 @@ export const KEYS = {
 };
 
 export const SIZES = {
-	ROWS: 20,
-	COLS: 10,
+	ROW_COUNT: 20,
+	COL_COUNT: 10,
 	TILE: 30,
-	HALF_TILE: 15,
+	HALF_TILE: 15, // TILE / 2
 	SIDEBAR: 100,
-	FIELD_WIDTH: 300,
-	WIDTH: 400,
-	HEIGHT: 600,
+	NEXT_BLOCK_AREA: 90, // SIDEBAR - 10
+	NEXT_BLOCK_AREA_PADDING: 15,
+	FIELD_WIDTH: 300, // TILE * COL_COUNT
+	GAME_WIDTH: 400, // FIELD_WIDTH + SIDEBAR
+	GAME_HEIGHT: 600, // TILE * ROW_COUNT
 };
 
 export const BLOCKS: Array<Block> = [
@@ -38,7 +40,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 1,
 		maxSize: 4,
 		tiles: 4,
-		defaultX: (SIZES.COLS / 2) - 2,
+		defaultX: (SIZES.COL_COUNT / 2) - 2,
 		defaultY: -2,
 		value: [
 			[0, 0, 0, 0],
@@ -52,7 +54,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 2,
 		maxSize: 3,
 		tiles: 3,
-		defaultX: (SIZES.COLS / 2) - 1,
+		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
 			[1, 0, 0],
@@ -65,7 +67,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 2,
 		maxSize: 3,
 		tiles: 3,
-		defaultX: (SIZES.COLS / 2) - 1,
+		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
 			[0, 0, 1],
@@ -78,7 +80,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 2,
 		maxSize: 2,
 		tiles: 2,
-		defaultX: (SIZES.COLS / 2) - 1,
+		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
 			[1, 1],
@@ -90,7 +92,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 2,
 		maxSize: 3,
 		tiles: 3,
-		defaultX: (SIZES.COLS / 2) - 1,
+		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
 			[0, 1, 1],
@@ -103,7 +105,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 2,
 		maxSize: 3,
 		tiles: 3,
-		defaultX: (SIZES.COLS / 2) - 1,
+		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
 			[0, 1, 0],
@@ -116,7 +118,7 @@ export const BLOCKS: Array<Block> = [
 		minSize: 2,
 		maxSize: 3,
 		tiles: 3,
-		defaultX: (SIZES.COLS / 2) - 1,
+		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
 			[1, 1, 0],

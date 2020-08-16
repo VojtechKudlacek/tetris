@@ -1,4 +1,4 @@
-export const randomFromTo = (min: number, max: number, floored: boolean = true): number => {
+export const randomFromTo = (min: number, max: number, floored: boolean = false): number => {
 	const random = Math.random() * (max - min + 1) + min;
 	return floored ? Math.floor(random) : random;
 }

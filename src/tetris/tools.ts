@@ -1,28 +1,31 @@
+import { SIZES } from './const';
+
 class Tools {
 
-	private ctx: CanvasRenderingContext2D;
-
-	constructor(ctx: CanvasRenderingContext2D) {
-		this.ctx = ctx;
+	static drawRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
+		ctx.fillStyle = color;
+		ctx.fillRect(x, y, w, h);
 	}
 
-	public clear(width: number, height: number, color: string): void {
-		this.ctx.clearRect(0, 0, width, height);
-		this.setColor(color);
-		this.ctx.fillRect(0, 0, width, height);
+	static fill(ctx: CanvasRenderingContext2D, w: number, h: number, color: string): void {
+		this.drawRect(ctx, 0, 0, w, h, color);
 	}
 
-	public setColor(color: string): void {
-		this.ctx.fillStyle = color;
+	static drawBlock(ctx: CanvasRenderingContext2D, x: number, y: number, color: Color, tileSize: number = SIZES.TILE): void {
+		ctx.fillStyle = color.dark;
+		ctx.fillRect(x, y, tileSize, tileSize);
+		ctx.fillStyle = color.light;
+		ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
 	}
 
-	public draw(x: number, y: number, w: number, h: number): void {
-		this.ctx.fillRect(x, y, w, h)
+	static write(ctx: CanvasRenderingContext2D, x: number, y: number, text: string, color: string): void {
+		ctx.fillStyle = color;
+		ctx.font = '14px monospace';
+		ctx.fillText(text, x, y);
 	}
 
-	public write(x: number, y: number, text: string): void {
-		this.ctx.font = '14px monospace';
-		this.ctx.fillText(text, x, y);
+	static drawPreRender(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, x: number, y: number): void {
+		ctx.drawImage(canvas, x, y);
 	}
 
 }
