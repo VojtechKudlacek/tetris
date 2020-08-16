@@ -5,14 +5,16 @@ import { BLOCKS, KEYS, SIZES } from './const';
 import { randomFromTo, createArray, create2DArray } from './utils';
 
 class Tetris {
+	// DOM
+	private ctx: CanvasRenderingContext2D;
+	// Subscribers
+	private gameEndSubscriber: Function;
+	// Render
+	private animating: boolean = false;
 	// PreRenderers
 	// private menuPreRenderer: PreRenderer; // Menu screen
 	private gamePreRenderer: PreRenderer; // Field with placed blocks + sidebar
 	private nextBlockPreRenderer: PreRenderer; // Next block area
-	// DOM
-	private ctx: CanvasRenderingContext2D;
-	// Render
-	private animating: boolean = false;
 	// Game
 	private score: number = 0;
 	private field: Field = [];
@@ -28,8 +30,9 @@ class Tetris {
 	// Particles
 	private particles: Array<Particle> = [];
 
-	constructor(canvas: HTMLCanvasElement) {
+	constructor(canvas: HTMLCanvasElement, gameEndSubscriber: Function) {
 		this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+		this.gameEndSubscriber = gameEndSubscriber;
 		// this.menuPreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
 		this.gamePreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
 		this.nextBlockPreRenderer = new PreRenderer({ height: SIZES.NEXT_BLOCK_AREA, width: SIZES.NEXT_BLOCK_AREA });
@@ -109,7 +112,8 @@ class Tetris {
 	private checkLoose(): void {
 		for (let i = 0; i < this.field[0].length; i++) {
 			if (this.field[0][i]) {
-				this.restart();
+				this.animating = false;
+				this.gameEndSubscriber();
 				break;
 			}
 		}
@@ -352,6 +356,7 @@ class Tetris {
 
 	public restart(): void {
 		this.gameSetup();
+		this.start();
 	}
 
 }
