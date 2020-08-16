@@ -75,7 +75,7 @@ class Tetris {
 		}
 	}
 
-	private checFilledkRows(): void {
+	private checFilledRows(): void {
 		let cleared = 0;
 		let score = 0;
 		for (let row = 0; row < SIZES.ROW_COUNT; row++) {
@@ -137,7 +137,7 @@ class Tetris {
 			this.currentBlock.setY(this.currentBlock.y + 1);
 		} else {
 			this.placeBlock();
-			this.checFilledkRows();
+			this.checFilledRows();
 			this.checkLoose();
 			this.replaceCurrentWithNextBlock();
 			this.preDrawGame();
