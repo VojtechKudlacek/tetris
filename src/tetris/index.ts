@@ -1,7 +1,7 @@
 import Tools from './tools';
 // import PreRenderer from './prerenderer';
 import Block from './block';
-import { BLOCKS, KEYS, SIZES, COLORS } from './const';
+import { BLOCKS, KEYS, SIZES } from './const';
 import { randomFromTo, createArray, create2DArray } from './utils';
 
 class Tetris {

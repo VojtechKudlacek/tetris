@@ -34,19 +34,18 @@ class Block implements Vector {
 	}
 
 	public rotateLeft(): void {
-		// TODO: Fix
 		const newValue = [];
-		for (let i = 0; i < this.value[0].length; i++) {
-			const newRow = this.value.map((row) => row[i]);
+    for (let col = 0; col < this.value[0].length; col++) {
+			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
 			newValue.push(newRow);
-		}
+	}
 		this.value = newValue;
 	}
 
 	public rotateRight(): void {
 		const newValue = [];
-		for (let i = 0; i < this.value[0].length; i++) {
-			const newRow = this.value.map((row) => row[i]).reverse();
+		for (let col = 0; col < this.value[0].length; col++) {
+			const newRow = this.value.map((row) => row[col]).reverse();
 			newValue.push(newRow);
 		}
 		this.value = newValue;
