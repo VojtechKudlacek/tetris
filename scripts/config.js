@@ -14,7 +14,6 @@ const createConfig = (env = 'development') => {
 		bundle: true,
 		define: {
 			'process.env.NODE_ENV': `"${env}"`, // Quotes because it will be replace with string
-			'process': 'undefined'
 		}
 	}
 }

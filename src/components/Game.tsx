@@ -1,11 +1,13 @@
-import React, { FunctionComponent, useEffect, useRef, RefObject } from 'react';
+import React, { FunctionComponent, useEffect, useRef, useState, RefObject, useMemo } from 'react';
 import Tetris from 'tetris';
-import { useStore } from 'store';
+import { SIZES } from 'tetris/const';
 
 const Game: FunctionComponent = () => {
 	const canvasRef: RefObject<HTMLCanvasElement> = useRef<HTMLCanvasElement>(null);
-	const store = useStore();
-	console.log(store);
+
+	const [inMenu, setInMenu] = useState<boolean>(false);
+	const canvasSizes = useMemo<Size>(() => ({ w: (SIZES.COL_COUNT * SIZES.TILE) + SIZES.SIDEBAR, h: SIZES.ROW_COUNT * SIZES.TILE }), []);
+
 	useEffect(() => {
 		if (canvasRef.current) {
 			const tetris = new Tetris(canvasRef.current);
@@ -15,7 +17,11 @@ const Game: FunctionComponent = () => {
 		}
 	}, [canvasRef]);
 
-	return <canvas width={400} height={600} ref={canvasRef} />;
+	return (
+		<div className="game">
+			<canvas width={canvasSizes.w} height={canvasSizes.h} ref={canvasRef} />
+		</div>
+	);
 }
 
 export default Game;
