@@ -1,4 +1,4 @@
-import Block from 'tetris/block';
+import Block from 'tetris/Block';
 
 type ColorOptions = 'BLUE' | 'GREEN' | 'LIGHT_BLUE' | 'ORANGE' | 'PURPLE' | 'RED' | 'YELLOW';
 export const COLORS: Record<ColorOptions, Color> = {

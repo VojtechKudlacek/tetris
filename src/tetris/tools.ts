@@ -1,4 +1,4 @@
-import { SIZES } from './const';
+import { SIZES } from 'tetris/const';
 
 class Tools {
 
