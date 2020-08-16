@@ -1,5 +1,6 @@
-export const randomFromTo = (min: number, max: number): number => {
-	return Math.floor(Math.random() * (max - min + 1) + min);
+export const randomFromTo = (min: number, max: number, floored: boolean = true): number => {
+	const random = Math.random() * (max - min + 1) + min;
+	return floored ? Math.floor(random) : random;
 }
 
 export const createArray = <T>(length: number, fill: T): Array<T> => {

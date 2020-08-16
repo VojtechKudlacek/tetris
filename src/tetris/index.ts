@@ -16,6 +16,7 @@ class Tetris {
 	// Render
 	private animating: boolean = false;
 	// Game
+	private score: number = 0;
 	private field: Field = [];
 	private colorField: Field<Color | null> = [];
 	private picker: Array<Block> = [];
@@ -70,12 +71,13 @@ class Tetris {
 
 	private createParticles(x: number, y: number, color: string, amount: number): void {
 		for (let i = 0; i < amount; i++) {
-			this.particles.push({ x, y, radius: randomFromTo(2, 5), vx: randomFromTo(-5, 5), vy: randomFromTo(-5, 5), color });
+			this.particles.push({ x, y, radius: randomFromTo(2, 5, false), vx: randomFromTo(-5, 5, false), vy: randomFromTo(-5, 5, false), color });
 		}
 	}
 
 	private checFilledkRows(): void {
 		let cleared = 0;
+		let score = 0;
 		for (let row = 0; row < this.field.length; row++) {
 			let count = 0;
 			for (let col = 0; col < this.field[row].length; col++) {
@@ -85,6 +87,7 @@ class Tetris {
 			}
 			if (count === SIZES.COLS) {
 				cleared++;
+				score += (cleared * 10);
 				for (let col = 0; col < SIZES.COLS; col++) {
 					const color = this.colorField[row][col] as Color;
 					this.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color.light, cleared * 10);
@@ -95,6 +98,7 @@ class Tetris {
 				this.colorField.unshift(createArray<null>(SIZES.COLS, null));
 			}
 		}
+		this.score += score;
 	}
 
 	private replaceCurrentWithNextBlock(): void {
@@ -165,6 +169,8 @@ class Tetris {
 		this.tools.draw(offset, 0, SIZES.SIDEBAR, SIZES.ROWS * SIZES.TILE);
 		this.tools.setColor('#ffffff');
 		this.tools.write(offset + 8, 20, 'NEXT BLOCK');
+		this.tools.write(offset + 8, 140, 'SCORE');
+		this.tools.write(offset + 8, 160, String(this.score));
 		this.tools.setColor('#000000');
 		this.tools.draw(offset + 5, 30, SIZES.SIDEBAR - 10, SIZES.SIDEBAR - 10);
 		this.drawNextBlock(offset + 5, 30, SIZES.SIDEBAR - 10);
@@ -290,6 +296,7 @@ class Tetris {
 	// EXPOSED
 
 	public init(withoutEvents = false) {
+		this.score = 0;
 		this.field = create2DArray<number>(SIZES.ROWS, SIZES.COLS, 0);
 		this.colorField = create2DArray<null>(SIZES.ROWS, SIZES.COLS, null);
 		this.fillPicker();
