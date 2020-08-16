@@ -1,39 +1,31 @@
 import Tools from './tools';
-import { BLOCKS, KEYS, SIZES, COLORS } from './const';
-import { randomFromTo, createArray, create2DArray, getBlockSizes } from './utils';
-
-interface Particle {
-	x: number;
-	y: number;
-	radius: number;
-	vx: number;
-	vy: number;
-	color: string;
-}
+// import PreRenderer from './prerenderer';
+import Block from './block';
+import { BLOCKS, KEYS, SIZES } from './const';
+import { randomFromTo, createArray, create2DArray } from './utils';
 
 class Tetris {
 	// Tools
 	private tools: Tools;
+	// PreRenderers
+	// private menuPreRenderer: PreRenderer;
+	// private gamePreRenderer: PreRenderer;
+	// private nextBlockPreRenderer: PreRenderer;
 	// DOM
 	private ctx: CanvasRenderingContext2D;
 	// Render
 	private animating: boolean = false;
 	// Game
-	private field: Board = [];
-	private colorField: Board<Color | null> = [];
-	private pickerA: Array<Shape> = [];
-	private pickerB: Array<Shape> = [];
+	private field: Field = [];
+	private colorField: Field<Color | null> = [];
+	private picker: Array<Block> = [];
 	// Time
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
 	private originalInterval: number = 200;
-	// Current block
-	private currentBlock!: Shape;
-	private currentColor!: Color;
-	private currentPos!: Vector;
-	// Next block
-	private nextBlock?: Shape;
-	private nextColor?: Color;
+	// Block
+	private nextBlock!: Block;
+	private currentBlock!: Block;
 	// Particles
 	private particles: Array<Particle> = [];
 
@@ -42,51 +34,32 @@ class Tetris {
 		this.tools = new Tools(this.ctx);
 	}
 
-	private fillPickers(): void {
-		const source = Object.values(BLOCKS);
-		// Welp, remove the god damn references for modifying the arrays later
-		this.pickerA = JSON.parse(JSON.stringify(source));
-		this.pickerB = JSON.parse(JSON.stringify(source));
+	private fillPicker(): void {
+		// Takes predefined blocks and duplicate them
+		this.picker = BLOCKS.map((block) => block.duplicate());
 	}
 
-	private pickRandomBlock(): Shape {
-		// Fill pickers if both empty
-		if (!this.pickerA.length && !this.pickerB.length) {
-			this.fillPickers();
+	private pickRandomBlock(): Block {
+		if (!this.picker.length) {
+			// If picker is empty, refill it
+			this.fillPicker();
 		}
-		// Return from emptier picker to make sure picking is pseudo-random
-		if (this.pickerA.length > this.pickerB.length) {
-			return this.pickerA.splice(randomFromTo(0, this.pickerA.length - 1), 1)[0];
-		}
-		return this.pickerB.splice(randomFromTo(0, this.pickerB.length - 1), 1)[0];
+		// Remove one block from the picker and return it
+		return this.picker.splice(randomFromTo(0, this.picker.length - 1), 1)[0];
 	}
 
-	private getRandomColor(): Color {
-		const colors = Object.keys(COLORS) as Array<Color>;
-		return colors[randomFromTo(0, colors.length - 1)];
-	}
-
-	private rotate(block: Shape): Shape {
-		const newBlock = [];
-		for (let i = 0; i < block[0].length; i++) {
-			let row = block.map(e => e[i]).reverse();
-			newBlock.push(row);
-		}
-		return newBlock;
-	}
-
-	private isColiding(block: Shape, { x, y }: Vector): boolean {
-		for (let i = 0; i < block.length; i++) { // i = row
-			for (let j = 0; j < block[i].length; j++) { // j = col
-				if (block[i][j]) {
-					if (x + j < 0) {
+	private isColiding(block: Block, { x, y }: Vector): boolean {
+		for (let row = 0; row < block.tiles; row++) {
+			for (let col = 0; col < block.tiles; col++) {
+				if (block.value[row][col]) { // If block has value at current iterated position
+					if (x + col < 0) { // If block is offscreen (left)
 						return true;
-					} else if ((x + j) >= SIZES.COLS) {
+					} else if ((x + col) >= SIZES.COLS) { // If block is offscreen (right)
 						return true;
-					} else if ((y + i) >= SIZES.ROWS) {
+					} else if ((y + row) >= SIZES.ROWS) { // If block is offscreen (bottom)
 						return true;
 					}
-					if (this.field[y + i] && this.field[y + i][x + j]) {
+					if (this.field[y + row] && this.field[y + row][x + col]) { // If block coliding with another placed block
 						return true;
 					}
 				}
@@ -97,77 +70,36 @@ class Tetris {
 
 	private createParticles(x: number, y: number, color: string, amount: number): void {
 		for (let i = 0; i < amount; i++) {
-			this.particles.push({
-				x,
-				y,
-				radius: 2 + Math.random()*3,
-				vx: -5 + Math.random()*10,
-				vy: -5 + Math.random()*10,
-				color,
-			});
+			this.particles.push({ x, y, radius: randomFromTo(2, 5), vx: randomFromTo(-5, 5), vy: randomFromTo(-5, 5), color });
 		}
 	}
 
-	private checkRows(): void {
-		const halfTile = Math.floor(SIZES.TILE / 2);
-		for (let i = 0; i < this.field.length; i++) { // i = row
+	private checFilledkRows(): void {
+		let cleared = 0;
+		for (let row = 0; row < this.field.length; row++) {
 			let count = 0;
-			for (let j = 0; j < this.field[i].length; j++) { // j = col
-				if (this.field[i][j]) {
+			for (let col = 0; col < this.field[row].length; col++) {
+				if (this.field[row][col]) {
 					count++;
 				}
 			}
 			if (count === SIZES.COLS) {
-				for (let j = 0; j < SIZES.COLS; j++) {
-					const color = this.colorField[i][j] as Color;
-					this.createParticles((j * SIZES.TILE) + halfTile, (i * SIZES.TILE) + halfTile, COLORS[color].light, 10);
+				cleared++;
+				for (let col = 0; col < SIZES.COLS; col++) {
+					const color = this.colorField[row][col] as Color;
+					this.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color.light, cleared * 10);
 				}
-				this.field.splice(i, 1);
+				this.field.splice(row, 1);
 				this.field.unshift(createArray<number>(SIZES.COLS, 0));
-				this.colorField.splice(i, 1);
+				this.colorField.splice(row, 1);
 				this.colorField.unshift(createArray<null>(SIZES.COLS, null));
 			}
 		}
 	}
 
 	private replaceCurrentWithNextBlock(): void {
-		this.currentBlock = this.nextBlock as Shape;
-		this.nextBlock = undefined;
-		this.currentColor = this.nextColor as Color;
-		this.nextColor = undefined;
-		const sizes = getBlockSizes(this.currentBlock);
-		this.currentPos = {
-			x: (SIZES.COLS / 2) - Math.floor(Math.max(sizes.w, sizes.h)),
-			y: -3,
-		}
-		this.checkBlocks(); // To fill the next block
-	}
-
-	private placeBlock(): void {
-		for (let i = 0; i < this.currentBlock.length; i++) { // i = row
-			for (let j = 0; j < this.currentBlock[i].length; j++) { // j = col
-				if (this.currentBlock[i][j]) {
-					const row = i + this.currentPos.y;
-					if (row < 0) {
-						break;
-					}
-					this.field[row][j + this.currentPos.x] = 1;
-					this.colorField[row][j + this.currentPos.x] = this.currentColor;
-				}
-			}
-		}
-		this.checkRows();
-		this.replaceCurrentWithNextBlock();
-	}
-
-	private checkBlocks(): void {
-		if (!this.nextBlock) {
-			this.nextBlock = this.pickRandomBlock();
-			this.nextColor = this.getRandomColor();
-		}
-		if (!this.currentBlock) {
-			this.replaceCurrentWithNextBlock();
-		}
+		this.currentBlock = this.nextBlock;
+		this.nextBlock = this.pickRandomBlock();
 	}
 
 	private checkLoose(): void {
@@ -179,34 +111,47 @@ class Tetris {
 		}
 	}
 
-	private processMove(): void {
-		this.checkBlocks();
+	private placeBlock(): void {
+		for (let row = 0; row < this.currentBlock.tiles; row++) {
+			for (let col = 0; col < this.currentBlock.tiles; col++) {
+				if (this.currentBlock.value[row][col]) {
+					const rowToPlace = row + this.currentBlock.y;
+					if (rowToPlace < 0) {
+						break;
+					}
+					this.field[rowToPlace][col + this.currentBlock.x] = 1;
+					this.colorField[rowToPlace][col + this.currentBlock.x] = this.currentBlock.color;
+				}
+			}
+		}
+		this.checFilledkRows();
 		this.checkLoose();
-		if (!this.isColiding(this.currentBlock, { x: this.currentPos.x, y: this.currentPos.y + 1 })) {
-			this.currentPos.y++;
+		this.replaceCurrentWithNextBlock();
+	}
+
+	private processMove(): void {
+		if (!this.isColiding(this.currentBlock, { x: this.currentBlock.x, y: this.currentBlock.y + 1 })) {
+			this.currentBlock.setY(this.currentBlock.y + 1);
 		} else {
 			this.placeBlock();
 		}
 	}
 
 	private drawNextBlock(x: number, y: number, drawSize: number): void {
+		// TODO: Add to prerenderer
 		if (this.nextBlock) {
 			const padding = 15;
-			const blockSize = getBlockSizes(this.nextBlock);
-			const maxBlockSize = Math.max(blockSize.h, blockSize.w);
-			const minBlockSize = Math.min(blockSize.h, blockSize.w);
-			const tileSize = (drawSize - (padding * 2)) / maxBlockSize;
-			const bonusPadding = (tileSize * (maxBlockSize - minBlockSize)) / 2;
-			const color = this.nextColor as Color;
-			for (let i = 0; i < this.nextBlock.length; i++) {
-				for (let j = 0; j < this.nextBlock[i].length; j++) {
-					if (this.nextBlock[i][j]) {
-						const xPos = (j * tileSize) + x + padding;
-						const yPos = (i * tileSize) + y + padding + bonusPadding;
-						this.tools.setColor(COLORS[color].dark);
-						this.tools.draw(xPos, yPos, tileSize, tileSize);
-						this.tools.setColor(COLORS[color].light);
-						this.tools.draw(xPos + 2, yPos + 2, tileSize - 2, tileSize - 2);
+			const drawTileSize = (drawSize - (padding * 2)) / this.nextBlock.maxSize;
+			const bonusPadding = (drawTileSize * (this.nextBlock.maxSize - this.nextBlock.minSize)) / 2;
+			for (let row = 0; row < this.nextBlock.tiles; row++) {
+				for (let col = 0; col < this.nextBlock.tiles; col++) {
+					if (this.nextBlock.value[row][col]) {
+						const xPos = (col * drawTileSize) + x + padding;
+						const yPos = (row * drawTileSize) + y + padding + bonusPadding;
+						this.tools.setColor(this.nextBlock.color.dark);
+						this.tools.draw(xPos, yPos, drawTileSize, drawTileSize);
+						this.tools.setColor(this.nextBlock.color.light);
+						this.tools.draw(xPos + 2, yPos + 2, drawTileSize - 2, drawTileSize - 2);
 					}
 				}
 			}
@@ -214,6 +159,7 @@ class Tetris {
 	}
 
 	private drawOverlay(): void {
+		// TODO: Add to prerenderer
 		const offset = SIZES.COLS * SIZES.TILE;
 		this.tools.setColor('#444444');
 		this.tools.draw(offset, 0, SIZES.SIDEBAR, SIZES.ROWS * SIZES.TILE);
@@ -226,26 +172,26 @@ class Tetris {
 
 	private draw(): void {
 		this.tools.setColor('#000000');
-		for (let i = 0; i < this.field.length; i++) { // i = row
-			for (let j = 0; j < this.field[i].length; j++) { // j = col
-				if (this.field[i][j]) {
-					const color = this.colorField[i][j] as Color;
-					this.tools.setColor(COLORS[color].dark);
-					this.tools.draw(j * SIZES.TILE, i * SIZES.TILE, SIZES.TILE, SIZES.TILE);
-					this.tools.setColor(COLORS[color].light);
-					this.tools.draw(j * SIZES.TILE + 2, i * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
+		for (let row = 0; row < this.field.length; row++) {
+			for (let col = 0; col < this.field[row].length; col++) {
+				if (this.field[row][col]) {
+					const color = this.colorField[row][col] as Color;
+					this.tools.setColor(color.dark);
+					this.tools.draw(col * SIZES.TILE, row * SIZES.TILE, SIZES.TILE, SIZES.TILE);
+					this.tools.setColor(color.light);
+					this.tools.draw(col * SIZES.TILE + 2, row * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
 				}
 			}
 		}
 		if (this.currentBlock) {
-			for (let i = 0; i < this.currentBlock.length; i++) { // i = row
-				for (let j = 0; j < this.currentBlock[i].length; j++) { // j = col
-					const isSolid = this.currentBlock[i][j];
+			for (let row = 0; row < this.currentBlock.tiles; row++) { // i = row
+				for (let col = 0; col < this.currentBlock.tiles; col++) { // j = col
+					const isSolid = this.currentBlock.value[row][col];
 					if (isSolid) {
-						this.tools.setColor(COLORS[this.currentColor].dark);
-						this.tools.draw((this.currentPos.x + j) * SIZES.TILE, (this.currentPos.y + i) * SIZES.TILE, SIZES.TILE, SIZES.TILE);
-						this.tools.setColor(COLORS[this.currentColor].light);
-						this.tools.draw((this.currentPos.x + j) * SIZES.TILE + 2, (this.currentPos.y + i) * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
+						this.tools.setColor(this.currentBlock.color.dark);
+						this.tools.draw((this.currentBlock.x + col) * SIZES.TILE, (this.currentBlock.y + row) * SIZES.TILE, SIZES.TILE, SIZES.TILE);
+						this.tools.setColor(this.currentBlock.color.light);
+						this.tools.draw((this.currentBlock.x + col) * SIZES.TILE + 2, (this.currentBlock.y + row) * SIZES.TILE + 2, SIZES.TILE - 2, SIZES.TILE - 2);
 					}
 				}
 			}
@@ -261,7 +207,7 @@ class Tetris {
 			particle.radius -= .02;
 			if(particle.radius < 0) {
 				this.particles.splice(i, 1);
-				i--;
+				i--; // Don't forget to lower the index when removing record from array
 			}
 		}
 	}
@@ -281,16 +227,11 @@ class Tetris {
 		}
 	}
 
-	private fillField(): void {
-		this.field = create2DArray<number>(SIZES.ROWS, SIZES.COLS, 0);
-		this.colorField = create2DArray<null>(SIZES.ROWS, SIZES.COLS, null);
-	}
-
 	private registerEvents(): void {
 		window.addEventListener('keyup', (e) => {
 			switch (e.keyCode) {
-				case KEYS.ARROW_UP:
-				case KEYS.ARROW_DOWN:
+				case KEYS.UP:
+				case KEYS.DOWN:
 					this.interval = this.originalInterval;
 					break;
 				default:
@@ -299,32 +240,40 @@ class Tetris {
 		});
 		window.addEventListener('keydown', (e) => {
 			switch (e.keyCode) {
-				case KEYS.ARROW_LEFT:
-					if (!this.currentBlock) { break; }
-					if (!this.isColiding(this.currentBlock, { x: this.currentPos.x - 1, y: this.currentPos.y })) {
-						this.currentPos.x--;
+				case KEYS.LEFT:
+					if (!this.isColiding(this.currentBlock, { x: this.currentBlock.x - 1, y: this.currentBlock.y })) {
+						this.currentBlock.setX(this.currentBlock.x - 1);
 					}
 					break
-				case KEYS.ARROW_RIGHT:
-					if (!this.currentBlock) { break; }
-					if (!this.isColiding(this.currentBlock, { x: this.currentPos.x + 1, y: this.currentPos.y })) {
-						this.currentPos.x++;
+				case KEYS.RIGHT:
+					if (!this.isColiding(this.currentBlock, { x: this.currentBlock.x + 1, y: this.currentBlock.y })) {
+						this.currentBlock.setX(this.currentBlock.x + 1);
 					}
 					break;
-				case KEYS.ARROW_DOWN:
-					this.interval = 50;
+				case KEYS.DOWN:
+					if (this.interval === this.originalInterval) {
+						this.interval = Math.floor(this.interval / 4);
+					}
 					break;
-				case KEYS.ARROW_UP:
+				case KEYS.UP:
 					this.interval = Infinity;
 					break;
-				case KEYS.SPACE:
-					if (this.currentBlock) {
-						const newBlock = this.rotate(this.currentBlock);
-						if (!this.isColiding(newBlock, this.currentPos)) {
-							this.currentBlock = newBlock;
-						}
+				case KEYS.A: {
+					const newBlock = this.currentBlock.duplicate();
+					newBlock.rotateLeft();
+					if (!this.isColiding(newBlock, newBlock.getPosition())) {
+						this.currentBlock = newBlock;
 					}
 					break;
+				}
+				case KEYS.S: {
+					const newBlock = this.currentBlock.duplicate();
+					newBlock.rotateRight();
+					if (!this.isColiding(newBlock, newBlock.getPosition())) {
+						this.currentBlock = newBlock;
+					}
+					break;
+				}
 				case KEYS.P:
 					if (this.animating) {
 						this.stop();
@@ -341,7 +290,11 @@ class Tetris {
 	// EXPOSED
 
 	public init(withoutEvents = false) {
-		this.fillField();
+		this.field = create2DArray<number>(SIZES.ROWS, SIZES.COLS, 0);
+		this.colorField = create2DArray<null>(SIZES.ROWS, SIZES.COLS, null);
+		this.fillPicker();
+		this.nextBlock = this.pickRandomBlock();
+		this.currentBlock = this.pickRandomBlock();
 		if (!withoutEvents) {
 			this.registerEvents();
 		}

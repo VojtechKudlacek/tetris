@@ -28,13 +28,13 @@ const server = http.Server(app);
 		} catch (e) {
 			console.log(chalk.red('Build failed!'));
 		}
-	}
+	};
 
 	const serve = async (port = 3000) => {
 		app.use(express.static(path.join(__dirname, '..', 'build')));
 		app.get('*', (_, res) => res.sendFile(path.join(__dirname, '..', 'build', 'index.html')));
 		server.listen(port, () => console.log(`${chalk.cyan('Server is running on')} ${chalk.green(`http://localhost:${port.toString()}`)}`));
-	}
+	};
 
 	const terminal = readline.createInterface({ input: process.stdin });
 
@@ -69,4 +69,4 @@ const server = http.Server(app);
 
 	await build();
 	await serve();
-})()
+})();

@@ -1,15 +1,14 @@
 import React, { FunctionComponent } from 'react';
-import { Provider as StoreProvider } from 'overmind-react';
 import Game from 'components/Game';
-import store from 'store';
+import Store from 'store';
 
 const App: FunctionComponent = () => {
 	return (
-		<StoreProvider value={store}>
+		<Store>
 			<main>
 				<Game />
 			</main>
-		</StoreProvider>
+		</Store>
 	);
 }
 

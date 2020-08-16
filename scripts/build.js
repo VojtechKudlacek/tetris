@@ -21,4 +21,4 @@ const buildOptions = require('./config')('production');
 		console.error(e);
 		console.log(chalk.red('Build failed!'));
 	}
-})()
+})();
