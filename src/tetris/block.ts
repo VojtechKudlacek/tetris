@@ -38,7 +38,7 @@ class Block implements Vector {
     for (let col = 0; col < this.value[0].length; col++) {
 			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
 			newValue.push(newRow);
-	}
+		}
 		this.value = newValue;
 	}
 
