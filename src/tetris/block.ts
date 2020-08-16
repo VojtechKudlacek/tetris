@@ -34,6 +34,7 @@ class Block implements Vector {
 	}
 
 	public rotateLeft(): void {
+		// TODO: Fix
 		const newValue = [];
 		for (let i = 0; i < this.value[0].length; i++) {
 			const newRow = this.value.map((row) => row[i]);
@@ -69,6 +70,8 @@ class Block implements Vector {
 	public duplicate(): Block {
 		return new Block({
 			...this,
+			defaultX: this.x,
+			defaultY: this.y,
 			value: JSON.parse(JSON.stringify(this.value))
 		});
 	}

@@ -119,9 +119,8 @@ class Tetris {
 					if (rowToPlace < 0) {
 						break;
 					}
-					console.log('Placing')
-					this.field[row][col + this.currentBlock.x] = 1;
-					this.colorField[row][col + this.currentBlock.x] = this.currentBlock.color;
+					this.field[rowToPlace][col + this.currentBlock.x] = 1;
+					this.colorField[rowToPlace][col + this.currentBlock.x] = this.currentBlock.color;
 				}
 			}
 		}
