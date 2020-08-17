@@ -2,7 +2,7 @@ import Tools from 'tetris/Tools';
 import PreRenderer from 'tetris/PreRenderer';
 import ParticleFactory from 'tetris/ParticleFactory';
 import Block from 'tetris/Block';
-import { BLOCKS, KEYS, SIZES } from 'tetris/const';
+import { BLOCKS, KEYS, SIZES, COLORS } from 'tetris/const';
 import { randomFromTo, createArray, create2DArray, isColiding } from 'tetris/utils';
 
 class Tetris {
@@ -12,16 +12,18 @@ class Tetris {
 	private gameEndSubscriber: Function;
 	// Render
 	private animating: boolean = false;
+	private inGame: boolean = false;
 	// PreRenderers
-	// private menuPreRenderer: PreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
 	private gamePreRenderer: PreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
 	private nextBlockPreRenderer: PreRenderer = new PreRenderer({ height: SIZES.NEXT_BLOCK_AREA, width: SIZES.NEXT_BLOCK_AREA });
 	// Game
 	private score: number = 0;
+	private highScore: number = Number(localStorage.getItem('highScore') || 0);
 	private field: Field = [];
-	private colorField: Field<Color | null> = [];
+	private colorField: Field<string | null> = [];
 	private picker: Array<Block> = [];
-	// Time
+	// Level
+	private level: number = 0;
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
 	private originalInterval: number = 200;
@@ -32,7 +34,7 @@ class Tetris {
 	private particleFactory: ParticleFactory = new ParticleFactory();
 
 	constructor(canvas: HTMLCanvasElement, gameEndSubscriber: Function) {
-		this.ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+		this.ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
 		this.gameEndSubscriber = gameEndSubscriber;
 	}
 
@@ -50,9 +52,12 @@ class Tetris {
 		return this.picker.splice(randomFromTo(0, this.picker.length - 1, true), 1)[0];
 	}
 
+	private addScore(combo: number): void {
+		this.score += 10 * combo * this.level;
+	}
+
 	private checFilledRows(): void {
 		let cleared = 0;
-		let score = 0;
 		for (let row = 0; row < SIZES.ROW_COUNT; row++) {
 			let count = 0;
 			for (let col = 0; col < SIZES.COL_COUNT; col++) {
@@ -62,18 +67,17 @@ class Tetris {
 			}
 			if (count === SIZES.COL_COUNT) {
 				cleared++;
-				score += (cleared * 10);
 				for (let col = 0; col < SIZES.COL_COUNT; col++) {
-					const color = this.colorField[row][col] as Color;
-					this.particleFactory.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color.light, cleared * 10);
+					const color = this.colorField[row][col] as string;
+					this.particleFactory.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color, 5, cleared);
 				}
 				this.field.splice(row, 1);
 				this.field.unshift(createArray<number>(SIZES.COL_COUNT, 0));
 				this.colorField.splice(row, 1);
 				this.colorField.unshift(createArray<null>(SIZES.COL_COUNT, null));
+				this.addScore(cleared);
 			}
 		}
-		this.score += score;
 	}
 
 	private replaceCurrentWithNextBlock(): void {
@@ -81,11 +85,19 @@ class Tetris {
 		this.nextBlock = this.pickRandomBlock();
 	}
 
+	private loose(): void {
+		if (this.score > this.highScore) {
+			this.highScore = this.score;
+			localStorage.setItem('highScore', String(this.score));
+		}
+		this.animating = false;
+		this.gameEndSubscriber();
+	}
+
 	private checkLoose(): void {
 		for (let i = 0; i < this.field[0].length; i++) {
 			if (this.field[0][i]) {
-				this.animating = false;
-				this.gameEndSubscriber();
+				this.loose();
 				break;
 			}
 		}
@@ -142,16 +154,19 @@ class Tetris {
 			for (let row = 0; row < SIZES.ROW_COUNT; row++) {
 				for (let col = 0; col < SIZES.COL_COUNT; col++) {
 					if (this.field[row][col]) {
-						const color = this.colorField[row][col] as Color;
+						const color = this.colorField[row][col] as string;
 						Tools.drawBlock(ctx, col * SIZES.TILE, row * SIZES.TILE, color);
 					}
 				}
 			}
 			// Draw sidebar
-			Tools.drawRect(ctx, SIZES.FIELD_WIDTH, 0, SIZES.SIDEBAR, SIZES.GAME_HEIGHT, '#111111');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 8, 20, 'NEXT BLOCK', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 8, 140, 'SCORE', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 8, 160, String(this.score), '#ffffff');
+			Tools.drawRect(ctx, SIZES.FIELD_WIDTH, 0, SIZES.SIDEBAR, SIZES.GAME_HEIGHT, '#000000');
+			Tools.drawLine(ctx, SIZES.FIELD_WIDTH + 1, 0, SIZES.FIELD_WIDTH + 1, SIZES.GAME_HEIGHT, '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 20, 'NEXT BLOCK', '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 140, 'SCORE', '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 160, String(this.score), '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 180, 'HIGH SCORE', '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 200, String(this.highScore), '#ffffff');
 		});
 	}
 
@@ -176,28 +191,60 @@ class Tetris {
 		})
 	}
 
+	private drawMenuBox(): void {
+		const centerX = Math.floor(SIZES.GAME_WIDTH / 2);
+		const centerY = Math.floor(SIZES.GAME_HEIGHT / 2);
+		const boxWidth = 250;
+		const boxHeight = 100;
+		Tools.drawRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#000000');
+		Tools.strokeRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#ffffff', 2);
+	}
+
 	/**
 	 * Rendering
 	 */
 	private render(): void {
-		// Draw game
-		Tools.drawPreRender(this.ctx, this.gamePreRenderer.get(), 0, 0);
-		// Draw next block
-		Tools.drawPreRender(this.ctx, this.nextBlockPreRenderer.get(), SIZES.FIELD_WIDTH + 5, 30);
-		// Draw current block
-		this.drawCurrentBlock();
-		// Draw particles
-		this.particleFactory.drawParticles(this.ctx);
+		Tools.clear(this.ctx, SIZES.GAME_WIDTH, SIZES.GAME_HEIGHT);
+		if (this.inGame) {
+			// Draw game
+			Tools.drawPreRender(this.ctx, this.gamePreRenderer.get(), 0, 0);
+			// Draw next block
+			Tools.drawPreRender(this.ctx, this.nextBlockPreRenderer.get(), SIZES.FIELD_WIDTH + 7, 30);
+			// Draw particles
+			this.particleFactory.drawParticles(this.ctx);
+			// Draw current block
+			this.drawCurrentBlock();
+		} else {
+			// Draw particles
+			this.particleFactory.drawParticles(this.ctx);
+			// Draw menu
+			this.drawMenuBox();
+		}
 	}
 
 	/**
 	 * Game processing
 	 */
-	private process(delta: number): void {
+	private processGame(delta: number): void {
 		this.particleFactory.processParticles();
 		if (delta - this.lastUpdateTime > this.interval) {
 			this.processMove();
 			this.lastUpdateTime = delta;
+		}
+	}
+
+	private processMenu(): void {
+		this.particleFactory.processParticles();
+		if (this.particleFactory.particles.length < 50) {
+			const colors = Object.values(COLORS);
+			for (let i = this.particleFactory.particles.length; i < 50; i++) {
+				this.particleFactory.createParticle(
+					Math.floor(SIZES.GAME_WIDTH / 2),
+					Math.floor(SIZES.GAME_HEIGHT / 2),
+					colors[randomFromTo(0, colors.length - 1, true)],
+					randomFromTo(0, 10)
+				);
+			}
 		}
 	}
 
@@ -208,7 +255,11 @@ class Tetris {
 	private loop = (delta: number): void => {
 		if (this.animating) {
 			this.render();
-			this.process(delta);
+			if (this.inGame) {
+				this.processGame(delta);
+			} else {
+				this.processMenu();
+			}
 		}
 		requestAnimationFrame(this.loop)
 	}
@@ -266,9 +317,9 @@ class Tetris {
 				}
 				case KEYS.P:
 					if (this.animating) {
-						this.pause();
+						this.animating = false;
 					} else {
-						this.start();
+						this.animating = true;
 					}
 					break;
 				default:
@@ -293,20 +344,26 @@ class Tetris {
 	public init(): void {
 		this.gameSetup();
 		this.registerEvents();
+		this.animating = true;
 		requestAnimationFrame(this.loop);
 	}
 
-	public start(): void {
+	public setLevel(level: number): void {
+		this.level = level;
+		const newInterval = 500 - (level * 50);
+		this.originalInterval = newInterval;
+		this.interval = newInterval;
+	}
+
+	public startGame(): void {
 		this.animating = true;
-	}
-
-	public pause(): void {
-		this.animating = false;
-	}
-
-	public restart(): void {
+		this.inGame = true;
 		this.gameSetup();
-		this.start();
+	}
+
+	public endGame(): void {
+		this.animating = true;
+		this.inGame = false;
 	}
 
 }

@@ -1,14 +1,13 @@
 import Block from 'tetris/Block';
 
-type ColorOptions = 'BLUE' | 'GREEN' | 'LIGHT_BLUE' | 'ORANGE' | 'PURPLE' | 'RED' | 'YELLOW';
-export const COLORS: Record<ColorOptions, Color> = {
-	BLUE: { light: '#5099E7', dark: '#104F9C' },
-	GREEN: { light: '#CCE900', dark: '#2B930C' },
-	LIGHT_BLUE: { light: '#99E5E3', dark: '#3DB5F3' },
-	ORANGE: { light: '#E9AB00', dark: '#CD5E02' },
-	PURPLE: { light: '#D5A8EA', dark: '#8419B3' },
-	RED: { light: '#E18700', dark: '#A32109' },
-	YELLOW: { light: '#EFD76B', dark: '#EEA73C' },
+export const COLORS = {
+	BLUE: '#00D9FF',
+	GREEN: '#13FF00',
+	PURPLE: '#B200FF',
+	ORANGE: '#FF8C00',
+	PINK: '#FF00D1',
+	RED: '#FF1C23',
+	YELLOW: '#EAE800'
 };
 
 export const KEYS = {
@@ -27,12 +26,12 @@ export const SIZES = {
 	COL_COUNT: 10,
 	TILE: 30,
 	HALF_TILE: 15, // TILE / 2
-	SIDEBAR: 100,
+	SIDEBAR: 102,
 	NEXT_BLOCK_AREA: 90, // SIDEBAR - 10
-	NEXT_BLOCK_AREA_PADDING: 15,
+	NEXT_BLOCK_AREA_PADDING: 5,
 	NEXT_BLOCK_ARE_TILE_COUNT: 4,
 	FIELD_WIDTH: 300, // TILE * COL_COUNT
-	GAME_WIDTH: 400, // FIELD_WIDTH + SIDEBAR
+	GAME_WIDTH: 402, // FIELD_WIDTH + SIDEBAR
 	GAME_HEIGHT: 600, // TILE * ROW_COUNT
 };
 
@@ -75,7 +74,7 @@ export const BLOCKS: Array<Block> = [
 			[1, 1, 1],
 			[0, 0, 0]
 		],
-		color: COLORS.LIGHT_BLUE
+		color: COLORS.PURPLE
 	}),
 	new Block({
 		minSize: 2,
@@ -100,7 +99,7 @@ export const BLOCKS: Array<Block> = [
 			[1, 1, 0],
 			[0, 0, 0]
 		],
-		color: COLORS.PURPLE
+		color: COLORS.PINK
 	}),
 	new Block({
 		minSize: 2,

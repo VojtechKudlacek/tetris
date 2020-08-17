@@ -25,7 +25,6 @@ class Game extends Component<Properties, State> {
 	componentDidMount(): void {
 		this.tetris = new Tetris(this.canvasRef.current as HTMLCanvasElement, this.onGameOver);
 		this.tetris.init();
-		this.tetris.start();
 		(window as any).tetris = this.tetris;
 	}
 
@@ -35,11 +34,33 @@ class Game extends Component<Properties, State> {
 
 	onRetry = () => {
 		this.setState({ gameOver: false });
-		this.tetris.restart();
+		this.tetris.startGame();
 	}
 
 	onMainMenu = () => {
 		this.setState({ gameOver: false, inMenu: true });
+		this.tetris.endGame();
+	}
+
+	onLevelSelect = (level: number) => () => {
+		this.setState({ inMenu: false });
+		this.tetris.setLevel(level);
+		this.tetris.startGame();
+	}
+
+	renderMenu(): ReactNode {
+		return (
+			<div style={{ width: '100%', height: '100%', display: 'table', position: 'absolute', top: 0, left: 0 }}>
+				<div style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center' }}>
+					<div style={{ fontSize: 20 }}>CHOOSE LEVEL!</div>
+					<div style={{ marginTop: 20 }}>
+						{Array.from({ length: 7 }, (_, index) => (
+							<button style={{ margin: '0 4px' }} key={index} onClick={this.onLevelSelect(index + 1)}>{index + 1}</button>
+						))}
+					</div>
+				</div>
+			</div>
+		);
 	}
 
 	renderGameOver(): ReactNode {
@@ -58,9 +79,10 @@ class Game extends Component<Properties, State> {
 
 	render(): ReactNode {
 		return (
-			<div style={{ position: 'relative', width: SIZES.GAME_WIDTH, height: SIZES.GAME_HEIGHT, margin: 'auto', border: '5px solid #00c4ff', boxSizing: 'content-box' }}>
+			<div style={{ position: 'relative', width: SIZES.GAME_WIDTH, height: SIZES.GAME_HEIGHT, margin: 'auto', border: '2px solid #ffffff', boxSizing: 'content-box' }}>
 				<canvas width={SIZES.GAME_WIDTH} height={SIZES.GAME_HEIGHT} ref={this.canvasRef} style={{ display: 'block' }} />
 				{this.state.gameOver && this.renderGameOver()}
+				{this.state.inMenu && this.renderMenu()}
 			</div>
 		);
 	}

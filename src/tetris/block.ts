@@ -5,7 +5,7 @@ interface Properties {
 	defaultY: number;
 	tiles: number;
 	value: Array<Array<number>>;
-	color: Color;
+	color: string;
 }
 
 class Block implements Vector {
@@ -16,7 +16,7 @@ class Block implements Vector {
 
 	public value: Array<Array<number>>;
 	public preview: Array<Array<number>>;
-	public color: Color;
+	public color: string;
 
 	public defaultX: number;
 	public defaultY: number;
