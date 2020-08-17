@@ -13,6 +13,6 @@
 - [x] Setup tetris
 - [x] Rendering optimization
 - [x] Refactor
-- [ ] Game menu
-- [ ] Some cool beans graphics
+- [x] Game menu
+- [x] Some cool beans graphics
 - [ ] Finish README
