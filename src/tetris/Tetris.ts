@@ -2,8 +2,8 @@ import Tools from 'tetris/Tools';
 import PreRenderer from 'tetris/PreRenderer';
 import ParticleFactory from 'tetris/ParticleFactory';
 import Block from 'tetris/Block';
+import Utils from 'tetris/Utils';
 import { BLOCKS, KEYS, SIZES, COLORS } from 'tetris/const';
-import { randomFromTo, createArray, create2DArray, isColiding } from 'tetris/utils';
 
 class Tetris {
 	// DOM
@@ -49,7 +49,7 @@ class Tetris {
 			this.fillPicker();
 		}
 		// Remove one block from the picker and return it
-		return this.picker.splice(randomFromTo(0, this.picker.length - 1, true), 1)[0];
+		return this.picker.splice(Utils.randomFromTo(0, this.picker.length - 1, true), 1)[0];
 	}
 
 	private addScore(combo: number): void {
@@ -72,9 +72,9 @@ class Tetris {
 					this.particleFactory.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color, 5, cleared);
 				}
 				this.field.splice(row, 1);
-				this.field.unshift(createArray<number>(SIZES.COL_COUNT, 0));
+				this.field.unshift(Utils.createArray<number>(SIZES.COL_COUNT, 0));
 				this.colorField.splice(row, 1);
-				this.colorField.unshift(createArray<null>(SIZES.COL_COUNT, null));
+				this.colorField.unshift(Utils.createArray<null>(SIZES.COL_COUNT, null));
 				this.addScore(cleared);
 			}
 		}
@@ -121,7 +121,7 @@ class Tetris {
 	// Game processing
 
 	private processMove(): void {
-		if (!isColiding(this.currentBlock, this.field, { x: this.currentBlock.x, y: this.currentBlock.y + 1 })) {
+		if (!Utils.isColiding(this.currentBlock, this.field, { x: this.currentBlock.x, y: this.currentBlock.y + 1 })) {
 			this.currentBlock.setY(this.currentBlock.y + 1);
 		} else {
 			this.placeBlock();
@@ -241,8 +241,8 @@ class Tetris {
 				this.particleFactory.createParticle(
 					Math.floor(SIZES.GAME_WIDTH / 2),
 					Math.floor(SIZES.GAME_HEIGHT / 2),
-					colors[randomFromTo(0, colors.length - 1, true)],
-					randomFromTo(0, 10)
+					colors[Utils.randomFromTo(0, colors.length - 1, true)],
+					Utils.randomFromTo(0, 10)
 				);
 			}
 		}
@@ -282,12 +282,12 @@ class Tetris {
 			}
 			switch (e.keyCode) {
 				case KEYS.LEFT:
-					if (!isColiding(this.currentBlock, this.field, { x: this.currentBlock.x - 1, y: this.currentBlock.y })) {
+					if (!Utils.isColiding(this.currentBlock, this.field, { x: this.currentBlock.x - 1, y: this.currentBlock.y })) {
 						this.currentBlock.setX(this.currentBlock.x - 1);
 					}
 					break
 				case KEYS.RIGHT:
-					if (!isColiding(this.currentBlock, this.field, { x: this.currentBlock.x + 1, y: this.currentBlock.y })) {
+					if (!Utils.isColiding(this.currentBlock, this.field, { x: this.currentBlock.x + 1, y: this.currentBlock.y })) {
 						this.currentBlock.setX(this.currentBlock.x + 1);
 					}
 					break;
@@ -302,7 +302,7 @@ class Tetris {
 				case KEYS.A: {
 					const newBlock = this.currentBlock.duplicate();
 					newBlock.rotateLeft();
-					if (!isColiding(newBlock, this.field, newBlock.getPosition())) {
+					if (!Utils.isColiding(newBlock, this.field, newBlock.getPosition())) {
 						this.currentBlock = newBlock;
 					}
 					break;
@@ -310,7 +310,7 @@ class Tetris {
 				case KEYS.S: {
 					const newBlock = this.currentBlock.duplicate();
 					newBlock.rotateRight();
-					if (!isColiding(newBlock, this.field, newBlock.getPosition())) {
+					if (!Utils.isColiding(newBlock, this.field, newBlock.getPosition())) {
 						this.currentBlock = newBlock;
 					}
 					break;
@@ -330,8 +330,8 @@ class Tetris {
 
 	private gameSetup(): void {
 		this.score = 0;
-		this.field = create2DArray<number>(SIZES.ROW_COUNT, SIZES.COL_COUNT, 0);
-		this.colorField = create2DArray<null>(SIZES.ROW_COUNT, SIZES.COL_COUNT, null);
+		this.field = Utils.create2DArray<number>(SIZES.ROW_COUNT, SIZES.COL_COUNT, 0);
+		this.colorField = Utils.create2DArray<null>(SIZES.ROW_COUNT, SIZES.COL_COUNT, null);
 		this.fillPicker();
 		this.nextBlock = this.pickRandomBlock();
 		this.currentBlock = this.pickRandomBlock();

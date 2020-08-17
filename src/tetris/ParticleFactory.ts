@@ -1,4 +1,4 @@
-import { randomFromTo } from 'tetris/utils';
+import Utils from 'tetris/Utils';
 import { SIZES } from './const';
 
 interface Particle extends Vector {
@@ -16,9 +16,9 @@ class ParticleFactory {
 		this.particles.push({
 			x,
 			y,
-			radius: randomFromTo(2 + sizeIncrement, 5 + sizeIncrement),
-			vx: randomFromTo(-5, 5),
-			vy: randomFromTo(-5, 5),
+			radius: Utils.randomFromTo(2 + sizeIncrement, 5 + sizeIncrement),
+			vx: Utils.randomFromTo(-5, 5),
+			vy: Utils.randomFromTo(-5, 5),
 			color
 		});
 	}
