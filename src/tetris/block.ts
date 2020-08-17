@@ -5,7 +5,7 @@ interface Properties {
 	defaultY: number;
 	tiles: number;
 	value: Array<Array<number>>;
-	color: Color;
+	color: string;
 }
 
 class Block implements Vector {
@@ -13,8 +13,10 @@ class Block implements Vector {
 	public minSize: number;
 	public maxSize: number;
 	public tiles: number;
+
 	public value: Array<Array<number>>;
-	public color: Color;
+	public preview: Array<Array<number>>;
+	public color: string;
 
 	public defaultX: number;
 	public defaultY: number;
@@ -29,8 +31,9 @@ class Block implements Vector {
 		this.minSize = props.minSize;
 		this.maxSize = props.maxSize;
 		this.tiles = props.tiles;
-		this.value = props.value;
 		this.color = props.color;
+		this.value = props.value;
+		this.preview = this.value.filter((row) => row.includes(1));
 	}
 
 	public rotateLeft(): void {

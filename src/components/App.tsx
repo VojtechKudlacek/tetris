@@ -1,14 +1,11 @@
 import React, { FunctionComponent } from 'react';
 import Game from 'components/Game';
-import Store from 'store';
 
 const App: FunctionComponent = () => {
 	return (
-		<Store>
-			<main>
-				<Game />
-			</main>
-		</Store>
+		<main style={{ paddingTop: 100 }}>
+			<Game />
+		</main>
 	);
 }
 
