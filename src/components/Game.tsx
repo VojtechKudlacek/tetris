@@ -54,8 +54,8 @@ class Game extends Component<Properties, State> {
 				<div style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center' }}>
 					<div style={{ fontSize: 20 }}>CHOOSE LEVEL!</div>
 					<div style={{ marginTop: 20 }}>
-						{Array.from({ length: 7 }, (_, index) => (
-							<button style={{ margin: '0 4px' }} key={index} onClick={this.onLevelSelect(index + 1)}>{index + 1}</button>
+						{Array.from({ length: 9 }, (_, index) => (
+							<button style={{ margin: '0 2px' }} key={index} onClick={this.onLevelSelect(index + 1)}>{index + 1}</button>
 						))}
 					</div>
 				</div>

@@ -18,16 +18,6 @@ const mkdir = (dir) => {
  * @param {string} src
  * @param {string} dest
  */
-const copyFile = (src, dest) => {
-	var oldFile = fs.createReadStream(src);
-	var newFile = fs.createWriteStream(dest);
-	oldFile.pipe(newFile)
-};
-
-/**
- * @param {string} src
- * @param {string} dest
- */
 const copyDir = (src, dest) => {
 	mkdir(dest);
 	const files = fs.readdirSync(src);
@@ -39,9 +29,9 @@ const copyDir = (src, dest) => {
 			const symlink = fs.readlinkSync(path.join(src, files[i]));
 			fs.symlinkSync(symlink, path.join(dest, files[i]));
 		} else {
-			copyFile(path.join(src, files[i]), path.join(dest, files[i]));
+			fs.copyFileSync(path.join(src, files[i]), path.join(dest, files[i]));
 		}
 	}
 };
 
-module.exports = { mkdir, copyFile, copyDir };
+module.exports = { copyDir };

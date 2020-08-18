@@ -4,7 +4,6 @@
 
 - I was bored
 - I wanted to try `esbuild`
-- I wanted to try `overmind`
 
 ## To Do
 
