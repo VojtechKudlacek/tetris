@@ -31,10 +31,9 @@ class Tools {
 	}
 
 	static drawBlock(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, tileSize: number = SIZES.TILE): void {
-		ctx.fillStyle = color;
-		ctx.fillRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
-		ctx.fillStyle = '#000000';
-		ctx.fillRect(x + 3, y + 3, tileSize - 6, tileSize - 6);
+		this.drawLine(ctx, x + 2, y + 2, x + tileSize - 2, y + tileSize - 2, color, 2);
+		this.drawLine(ctx, x + 2, y + tileSize - 2, x + tileSize - 2, y + 2, color, 2);
+		this.strokeRect(ctx, x + 2, y + 2, tileSize - 4, tileSize - 4, color, 2);
 	}
 
 	static write(ctx: CanvasRenderingContext2D, x: number, y: number, text: string, color: string): void {
