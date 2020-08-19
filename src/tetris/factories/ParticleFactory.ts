@@ -1,5 +1,5 @@
-import Utils from 'tetris/Utils';
-import { SIZES } from './const';
+import * as utils from 'tetris/utils';
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from '../const';
 
 interface Particle extends Vector {
 	vx: number;
@@ -16,9 +16,9 @@ class ParticleFactory {
 		this.particles.push({
 			x,
 			y,
-			radius: Utils.randomFromTo(2 + sizeIncrement, 5 + sizeIncrement),
-			vx: Utils.randomFromTo(-5, 5),
-			vy: Utils.randomFromTo(-5, 5),
+			radius: utils.randomFromTo(2 + sizeIncrement, 5 + sizeIncrement),
+			vx: utils.randomFromTo(-5, 5),
+			vy: utils.randomFromTo(-5, 5),
 			color
 		});
 	}
@@ -35,7 +35,7 @@ class ParticleFactory {
 			particle.x += particle.vx;
 			particle.y += particle.vy;
 			particle.radius -= .02;
-			if(particle.radius < 0 || particle.x < 0 || particle.y < 0 || particle.x > SIZES.GAME_WIDTH || particle.y > SIZES.GAME_HEIGHT) {
+			if(particle.radius < 0 || particle.x < 0 || particle.y < 0 || particle.x > CANVAS_WIDTH || particle.y > CANVAS_HEIGHT) {
 				this.particles.splice(i, 1);
 				i--; // Don't forget to lower the index when removing record from array
 			}

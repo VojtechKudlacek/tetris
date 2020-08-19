@@ -2,8 +2,8 @@ class ScoreManager {
 
 	private readonly SCORE_BASE: number = 40;
 
-	private score: number = 0;
-	private highScore: number = Number(localStorage.getItem('highScore') || 0);
+	public score: number = 0;
+	public highScore: number = Number(localStorage.getItem('highScore') || 0);
 
 	private getMultiplier(combo: number): number {
 		return [1, 2.5, 7.5, 30][combo] || 1;
@@ -20,16 +20,8 @@ class ScoreManager {
 		this.score += this.SCORE_BASE * this.getMultiplier(combo) * level;
 	}
 
-	public restart(): void {
+	public init(): void {
 		this.score = 0;
-	}
-
-	public get Score(): number {
-		return this.score;
-	}
-
-	public get HighScore(): number {
-		return this.highScore;
 	}
 
 }

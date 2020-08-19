@@ -24,3 +24,81 @@ header, section, footer, aside, nav, main, article, figure {
 code {
 	font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
+
+.app {
+	display: table;
+	min-height: 100vh;
+	width: 100%;
+}
+
+.app-aligner {
+	display: table-cell;
+	vertical-align: middle;
+}
+
+/* TETRIS */
+
+.tetris {
+	position: relative;
+	margin: auto;
+	border: 2px solid #ffffff;
+	box-sizing: content-box;
+}
+
+.tetris-overlay {
+	position: absolute;
+	display: table;
+	height: 100%;
+	width: 100%;
+	top: 0;
+	left: 0;
+}
+
+.tetris-overlay.tetris-dark-overlay {
+	background: rgba(0, 0, 0, 0.9);
+}
+
+.tetris-overlay.tetris-black-overlay {
+	background: #000000;
+}
+
+.tetris-aligner {
+	display: table-cell;
+	vertical-align: middle;
+	text-align: center;
+}
+
+.tetris-title {
+	font-size: 20px;
+}
+
+.tetris-buttons, .tetris-levels {
+	margin-top: 10px;
+}
+
+.tetris-button {
+	width: 100px;
+	height: 32px;
+	margin: 4px;
+	color: #ffffff;
+	background: #000000;
+	border: 2px solid #ffffff;
+	font-size: 14px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.tetris-button:hover {
+	color: #000000;
+	background: #ffffff;
+}
+
+.tetris-button.tetris-level {
+	width: 32px;
+	height: 32px;
+	margin: 4px;
+}
+
+.tetris-renderer {
+	display: block;
+}

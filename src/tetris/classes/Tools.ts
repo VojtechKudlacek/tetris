@@ -1,4 +1,4 @@
-import { SIZES } from 'tetris/const';
+import { TILE_SIZE } from 'tetris/const';
 
 class Tools {
 
@@ -30,7 +30,7 @@ class Tools {
 		ctx.stroke();
 	}
 
-	static drawBlock(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, tileSize: number = SIZES.TILE): void {
+	static drawBlock(ctx: CanvasRenderingContext2D, x: number, y: number, color: string, tileSize: number = TILE_SIZE): void {
 		this.drawLine(ctx, x + 2, y + 2, x + tileSize - 2, y + tileSize - 2, color, 2);
 		this.drawLine(ctx, x + 2, y + tileSize - 2, x + tileSize - 2, y + 2, color, 2);
 		this.strokeRect(ctx, x + 2, y + 2, tileSize - 4, tileSize - 4, color, 2);

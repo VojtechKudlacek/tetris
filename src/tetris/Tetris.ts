@@ -1,142 +1,86 @@
-import Tools from 'tetris/Tools';
-import PreRenderer from 'tetris/PreRenderer';
-import ParticleFactory from 'tetris/ParticleFactory';
-import Block from 'tetris/Block';
-import Utils from 'tetris/Utils';
-import ScoreManager from 'tetris/ScoreManager';
-import { BLOCKS, KEYS, SIZES, COLORS } from 'tetris/const';
+import Tools from 'tetris/classes/Tools';
+import PreRenderer from 'tetris/classes/PreRenderer';
+import DomManager from 'tetris/managers/DomManager';
+import ScoreManager from 'tetris/managers/ScoreManager';
+import FieldManager from 'tetris/managers/FieldManager';
+import ParticleFactory from 'tetris/factories/ParticleFactory';
+import BlockFactory from 'tetris/factories/BlockFactory';
+import * as CONST from 'tetris/const';
+import * as utils from 'tetris/utils';
 
 class Tetris {
 	// DOM
 	private ctx: CanvasRenderingContext2D;
-	// Subscribers
-	private gameEndSubscriber: Function;
+	private domManager: DomManager;
 	// Render
 	private animating: boolean = false;
 	private inGame: boolean = false;
 	// PreRenderers
-	private gamePreRenderer: PreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
-	private nextBlockPreRenderer: PreRenderer = new PreRenderer({ height: SIZES.NEXT_BLOCK_AREA, width: SIZES.NEXT_BLOCK_AREA });
+	private gamePreRenderer: PreRenderer = new PreRenderer({ height: CONST.CANVAS_HEIGHT, width: CONST.CANVAS_WIDTH });
+	private nextBlockPreRenderer: PreRenderer = new PreRenderer({ height: CONST.NEXT_BLOCK_AREA, width: CONST.NEXT_BLOCK_AREA });
 	// Score
 	private scoreManager: ScoreManager = new ScoreManager();
 	// Game
-	private field: Field = [];
-	private colorField: Field<string | null> = [];
-	private picker: Array<Block> = [];
+	private fieldManager: FieldManager = new FieldManager();
 	// Level
 	private level: number = 0;
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
 	private originalInterval: number = 200;
 	// Block
-	private nextBlock!: Block;
-	private currentBlock!: Block;
+	private blockFactory: BlockFactory = new BlockFactory();
 	// Particles
 	private particleFactory: ParticleFactory = new ParticleFactory();
 
-	constructor(canvas: HTMLCanvasElement, gameEndSubscriber: Function) {
-		this.ctx = canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-		this.gameEndSubscriber = gameEndSubscriber;
-	}
-
-	private fillPicker(): void {
-		// Takes predefined blocks and duplicate them
-		this.picker = BLOCKS.map((block) => block.duplicate());
-	}
-
-	private pickRandomBlock(): Block {
-		if (!this.picker.length) {
-			// If picker is empty, refill it
-			this.fillPicker();
-		}
-		// Remove one block from the picker and return it
-		return this.picker.splice(Utils.randomFromTo(0, this.picker.length - 1, true), 1)[0];
-	}
-
-	private checFilledRows(): void {
-		let cleared = 0;
-		for (let row = 0; row < SIZES.ROW_COUNT; row++) {
-			let count = 0;
-			for (let col = 0; col < SIZES.COL_COUNT; col++) {
-				if (this.field[row][col]) {
-					count++;
-				}
-			}
-			if (count === SIZES.COL_COUNT) {
-				cleared++;
-				for (let col = 0; col < SIZES.COL_COUNT; col++) {
-					const color = this.colorField[row][col] as string;
-					this.particleFactory.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color, 5, (cleared * 2));
-				}
-				this.field.splice(row, 1);
-				this.field.unshift(Utils.createArray<number>(SIZES.COL_COUNT, 0));
-				this.colorField.splice(row, 1);
-				this.colorField.unshift(Utils.createArray<null>(SIZES.COL_COUNT, null));
-				this.scoreManager.add(this.level, cleared - 1);
-			}
-		}
-	}
-
-	private replaceCurrentWithNextBlock(): void {
-		this.currentBlock = this.nextBlock;
-		this.nextBlock = this.pickRandomBlock();
+	constructor(parent: HTMLElement) {
+		this.domManager = new DomManager(parent);
+		this.domManager.createCanvas();
+		this.ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
 	}
 
 	private loose(): void {
 		this.scoreManager.updateHighScore();
 		this.animating = false;
-		this.gameEndSubscriber();
-	}
-
-	private checkLoose(): void {
-		for (let i = 0; i < this.field[0].length; i++) {
-			if (this.field[0][i]) {
-				this.loose();
-				break;
-			}
-		}
-	}
-
-	private placeBlock(): void {
-		for (let row = 0; row < this.currentBlock.tiles; row++) {
-			for (let col = 0; col < this.currentBlock.tiles; col++) {
-				if (this.currentBlock.value[row][col]) {
-					const rowToPlace = row + this.currentBlock.y;
-					if (rowToPlace < 0) {
-						break;
-					}
-					this.field[rowToPlace][col + this.currentBlock.x] = 1;
-					this.colorField[rowToPlace][col + this.currentBlock.x] = this.currentBlock.color;
-				}
-			}
-		}
+		this.domManager.showScreen('gameOver');
 	}
 
 	// Game processing
 
 	private processMove(): void {
-		if (!Utils.isColiding(this.currentBlock, this.field, { x: this.currentBlock.x, y: this.currentBlock.y + 1 })) {
-			this.currentBlock.setY(this.currentBlock.y + 1);
+		const currentBlock = this.blockFactory.currentBlock;
+		if (!this.fieldManager.isColiding(currentBlock, currentBlock.x, currentBlock.y + 1)) {
+			currentBlock.setY(currentBlock.y + 1);
 		} else {
-			this.placeBlock();
-			this.checFilledRows();
-			this.checkLoose();
-			this.replaceCurrentWithNextBlock();
-			this.preDrawGame();
-			this.preDrawNextBlock();
+			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
+			this.fieldManager.checkAndClearFilledRows((row, cleared) => {
+				this.fieldManager.iterateCols(row, (col, _, color) => {
+					const x = (col * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
+					const y = (row * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
+					this.particleFactory.createParticles(x, y, color, 5, (cleared * 2));
+				});
+				this.scoreManager.add(this.level, cleared - 1);
+			});
+
+			if (this.fieldManager.isBlockInFirstRow) {
+				this.loose();
+			} else {
+				this.blockFactory.useNextBlock();
+				this.preDrawGame();
+				this.preDrawNextBlock();
+			}
 		}
 	}
 
 	// Drawing
 
 	private drawCurrentBlock(): void {
-		for (let row = 0; row < this.currentBlock.tiles; row++) {
-			for (let col = 0; col < this.currentBlock.tiles; col++) {
-				if (this.currentBlock.value[row][col]) {
-					Tools.drawBlock(this.ctx, (this.currentBlock.x + col) * SIZES.TILE, (this.currentBlock.y + row) * SIZES.TILE, this.currentBlock.color);
-				}
+		this.blockFactory.currentBlock.iterate((row, col, value, block) => {
+			if (value) {
+				const x = (block.x + col) * CONST.TILE_SIZE;
+				const y = (block.y + row) * CONST.TILE_SIZE;
+				Tools.drawBlock(this.ctx, x, y, block.color);
 			}
-		}
+		});
 	}
 
 	private preDrawGame(): void {
@@ -144,22 +88,19 @@ class Tetris {
 			// Fill are with black color
 			Tools.fill(ctx, w, h, '#000000');
 			// Draw filled blocks with its color
-			for (let row = 0; row < SIZES.ROW_COUNT; row++) {
-				for (let col = 0; col < SIZES.COL_COUNT; col++) {
-					if (this.field[row][col]) {
-						const color = this.colorField[row][col] as string;
-						Tools.drawBlock(ctx, col * SIZES.TILE, row * SIZES.TILE, color);
-					}
+			this.fieldManager.iterate((row, col, value, color) => {
+				if (value) {
+					Tools.drawBlock(ctx, col * CONST.TILE_SIZE, row * CONST.TILE_SIZE, color);
 				}
-			}
+			});
 			// Draw sidebar
-			Tools.drawRect(ctx, SIZES.FIELD_WIDTH, 0, SIZES.SIDEBAR, SIZES.GAME_HEIGHT, '#000000');
-			Tools.drawLine(ctx, SIZES.FIELD_WIDTH + 1, 0, SIZES.FIELD_WIDTH + 1, SIZES.GAME_HEIGHT, '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 20, 'NEXT BLOCK', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 140, 'SCORE', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 160, String(this.scoreManager.Score), '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 180, 'HIGH SCORE', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 200, String(this.scoreManager.HighScore), '#ffffff');
+			Tools.drawRect(ctx, CONST.GAME_WIDTH, 0, CONST.SIDEBAR_BORDER_WIDTH + CONST.SIDEBAR_WIDTH, CONST.CANVAS_HEIGHT, '#000000');
+			Tools.drawLine(ctx, CONST.GAME_WIDTH + 1, 0, CONST.GAME_WIDTH + 1, CONST.CANVAS_HEIGHT, '#ffffff');
+			Tools.write(ctx, CONST.GAME_WIDTH + 10, 20, 'NEXT BLOCK', '#ffffff');
+			Tools.write(ctx, CONST.GAME_WIDTH + 10, 140, 'SCORE', '#ffffff');
+			Tools.write(ctx, CONST.GAME_WIDTH + 10, 160, String(this.scoreManager.score), '#ffffff');
+			Tools.write(ctx, CONST.GAME_WIDTH + 10, 180, 'HIGH SCORE', '#ffffff');
+			Tools.write(ctx, CONST.GAME_WIDTH + 10, 200, String(this.scoreManager.highScore), '#ffffff');
 		});
 	}
 
@@ -168,16 +109,17 @@ class Tetris {
 			// Fill are with black color
 			Tools.fill(ctx, w, h, '#000000');
 			// Draw the next block
-			const drawTileSize = (SIZES.NEXT_BLOCK_AREA - (SIZES.NEXT_BLOCK_AREA_PADDING * 2)) / SIZES.NEXT_BLOCK_ARE_TILE_COUNT;
+			const drawTileSize = (CONST.NEXT_BLOCK_AREA - (CONST.NEXT_BLOCK_AREA_PADDING * 2)) / CONST.NEXT_BLOCK_ARE_TILE_COUNT;
+			const nextBlock = this.blockFactory.nextBlock;
 			// This is a bit of a hack, since all of the blocks are always vertically longer than horizontally
-			const horizontalPadding = ((drawTileSize * (SIZES.NEXT_BLOCK_ARE_TILE_COUNT - this.nextBlock.preview[0].length)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
-			const verticalPadding = ((drawTileSize * (SIZES.NEXT_BLOCK_ARE_TILE_COUNT - this.nextBlock.preview.length)) / 2) + SIZES.NEXT_BLOCK_AREA_PADDING;
-			for (let row = 0; row < this.nextBlock.preview.length; row++) {
-				for (let col = 0; col < this.nextBlock.preview[0].length; col++) {
-					if (this.nextBlock.preview[row][col]) {
+			const horizontalPadding = ((drawTileSize * (CONST.NEXT_BLOCK_ARE_TILE_COUNT - nextBlock.preview[0].length)) / 2) + CONST.NEXT_BLOCK_AREA_PADDING;
+			const verticalPadding = ((drawTileSize * (CONST.NEXT_BLOCK_ARE_TILE_COUNT - nextBlock.preview.length)) / 2) + CONST.NEXT_BLOCK_AREA_PADDING;
+			for (let row = 0; row < nextBlock.preview.length; row++) {
+				for (let col = 0; col < nextBlock.preview[0].length; col++) {
+					if (nextBlock.preview[row][col]) {
 						const x = (col * drawTileSize) + horizontalPadding;
 						const y = (row * drawTileSize) + verticalPadding;
-						Tools.drawBlock(ctx, x, y, this.nextBlock.color, drawTileSize);
+						Tools.drawBlock(ctx, x, y, nextBlock.color, drawTileSize);
 					}
 				}
 			}
@@ -185,10 +127,10 @@ class Tetris {
 	}
 
 	private drawMenuBox(): void {
-		const centerX = Math.floor(SIZES.GAME_WIDTH / 2);
-		const centerY = Math.floor(SIZES.GAME_HEIGHT / 2);
+		const centerX = Math.floor(CONST.CANVAS_WIDTH / 2);
+		const centerY = Math.floor(CONST.CANVAS_HEIGHT / 2);
 		const boxWidth = 250;
-		const boxHeight = 140;
+		const boxHeight = 160;
 		Tools.drawRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#000000');
 		Tools.strokeRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#ffffff', 2);
 	}
@@ -197,12 +139,12 @@ class Tetris {
 	 * Rendering
 	 */
 	private render(): void {
-		Tools.clear(this.ctx, SIZES.GAME_WIDTH, SIZES.GAME_HEIGHT);
+		Tools.clear(this.ctx, CONST.CANVAS_WIDTH, CONST.CANVAS_HEIGHT);
 		if (this.inGame) {
 			// Draw game
-			Tools.drawPreRender(this.ctx, this.gamePreRenderer.get(), 0, 0);
+			Tools.drawPreRender(this.ctx, this.gamePreRenderer.image, 0, 0);
 			// Draw next block
-			Tools.drawPreRender(this.ctx, this.nextBlockPreRenderer.get(), SIZES.FIELD_WIDTH + 7, 30);
+			Tools.drawPreRender(this.ctx, this.nextBlockPreRenderer.image, CONST.GAME_WIDTH + 7, 30);
 			// Draw particles
 			this.particleFactory.drawParticles(this.ctx);
 			// Draw current block
@@ -229,13 +171,13 @@ class Tetris {
 	private processMenu(): void {
 		this.particleFactory.processParticles();
 		if (this.particleFactory.particles.length < 50) {
-			const colors = Object.values(COLORS);
+			const colors = Object.values(CONST.COLORS);
 			for (let i = this.particleFactory.particles.length; i < 50; i++) {
 				this.particleFactory.createParticle(
-					Math.floor(SIZES.GAME_WIDTH / 2),
-					Math.floor(SIZES.GAME_HEIGHT / 2),
-					colors[Utils.randomFromTo(0, colors.length - 1, true)],
-					Utils.randomFromTo(0, 10)
+					Math.floor(CONST.CANVAS_WIDTH / 2),
+					Math.floor(CONST.CANVAS_HEIGHT / 2),
+					colors[utils.randomFromTo(0, colors.length - 1, true)],
+					utils.randomFromTo(0, 10)
 				);
 			}
 		}
@@ -260,8 +202,8 @@ class Tetris {
 	private registerEvents(): void {
 		window.addEventListener('keyup', (e) => {
 			switch (e.keyCode) {
-				case KEYS.UP:
-				case KEYS.DOWN:
+				case CONST.KEYS.UP:
+				case CONST.KEYS.DOWN:
 					this.interval = this.originalInterval;
 					break;
 				default:
@@ -270,49 +212,54 @@ class Tetris {
 		});
 
 		window.addEventListener('keydown', (e) => {
-			if (!this.animating && e.keyCode !== KEYS.P) {
+			if (!this.animating && e.keyCode !== CONST.KEYS.P) {
 				return;
 			}
+			const currentBlock = this.blockFactory.currentBlock;
 			switch (e.keyCode) {
-				case KEYS.LEFT:
-					if (!Utils.isColiding(this.currentBlock, this.field, { x: this.currentBlock.x - 1, y: this.currentBlock.y })) {
-						this.currentBlock.setX(this.currentBlock.x - 1);
+				case CONST.KEYS.LEFT:
+					if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
+						currentBlock.setX(currentBlock.x - 1);
 					}
 					break
-				case KEYS.RIGHT:
-					if (!Utils.isColiding(this.currentBlock, this.field, { x: this.currentBlock.x + 1, y: this.currentBlock.y })) {
-						this.currentBlock.setX(this.currentBlock.x + 1);
+				case CONST.KEYS.RIGHT:
+					if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
+						currentBlock.setX(currentBlock.x + 1);
 					}
 					break;
-				case KEYS.DOWN:
+				case CONST.KEYS.DOWN:
 					if (this.interval === this.originalInterval) {
 						this.interval = Math.floor(this.interval / 4);
 					}
 					break;
-				case KEYS.UP:
+				case CONST.KEYS.UP:
 					this.interval = Infinity;
 					break;
-				case KEYS.A: {
-					const newBlock = this.currentBlock.duplicate();
+				case CONST.KEYS.A: {
+					const newBlock = currentBlock.duplicate();
 					newBlock.rotateLeft();
-					if (!Utils.isColiding(newBlock, this.field, newBlock.getPosition())) {
-						this.currentBlock = newBlock;
+					if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
+						this.blockFactory.currentBlock = newBlock;
 					}
 					break;
 				}
-				case KEYS.S: {
-					const newBlock = this.currentBlock.duplicate();
+				case CONST.KEYS.S: {
+					const newBlock = currentBlock.duplicate();
 					newBlock.rotateRight();
-					if (!Utils.isColiding(newBlock, this.field, newBlock.getPosition())) {
-						this.currentBlock = newBlock;
+					if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
+						this.blockFactory.currentBlock = newBlock;
 					}
 					break;
 				}
-				case KEYS.P:
-					if (this.animating) {
-						this.animating = false;
-					} else {
-						this.animating = true;
+				case CONST.KEYS.P:
+					if (this.inGame) {
+						if (this.animating) {
+							this.animating = false;
+							this.domManager.showScreen('pause');
+						} else {
+							this.animating = true;
+							this.domManager.showScreen('none');
+						}
 					}
 					break;
 				default:
@@ -322,12 +269,9 @@ class Tetris {
 	}
 
 	private gameSetup(): void {
-		this.scoreManager.restart();
-		this.field = Utils.create2DArray<number>(SIZES.ROW_COUNT, SIZES.COL_COUNT, 0);
-		this.colorField = Utils.create2DArray<null>(SIZES.ROW_COUNT, SIZES.COL_COUNT, null);
-		this.fillPicker();
-		this.nextBlock = this.pickRandomBlock();
-		this.currentBlock = this.pickRandomBlock();
+		this.fieldManager.init();
+		this.scoreManager.init();
+		this.blockFactory.init();
 		this.preDrawGame();
 		this.preDrawNextBlock();
 	}
@@ -336,6 +280,19 @@ class Tetris {
 
 	public init(): void {
 		this.gameSetup();
+		this.domManager.init({
+			onLevelSelect: (level: number) => {
+				this.setLevel(level);
+				this.startGame();
+			},
+			onRestart: () => this.startGame(),
+			onMenu: () => {
+				this.domManager.showScreen('menu');
+				this.inGame = false;
+				this.animating = true;
+			}
+		});
+		this.domManager.showScreen('menu');
 		this.registerEvents();
 		this.animating = true;
 		requestAnimationFrame(this.loop);
@@ -351,6 +308,7 @@ class Tetris {
 	public startGame(): void {
 		this.animating = true;
 		this.inGame = true;
+		this.domManager.showScreen('none');
 		this.gameSetup();
 	}
 
