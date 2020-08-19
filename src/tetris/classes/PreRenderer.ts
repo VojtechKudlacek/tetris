@@ -28,7 +28,7 @@ class PreRenderer {
 		fn(this.ctx, this.width, this.height);
 	}
 
-	public get() {
+	public get image(): HTMLCanvasElement {
 		return this.canvas;
 	}
 

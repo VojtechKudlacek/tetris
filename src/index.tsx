@@ -1,8 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import App from 'components/App';
-import { unregister } from 'services/workers';
+import Tetris from 'tetris';
+import * as workers from 'services/workers';
 
-ReactDOM.render(<App />, document.getElementById('root'));
+const tetris: Tetris = new Tetris(document.getElementById('tetris') as HTMLElement);
+tetris.init();
 
-unregister();
+workers.unregister();

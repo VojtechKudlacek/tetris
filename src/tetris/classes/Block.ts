@@ -62,13 +62,6 @@ class Block implements Vector {
 		this.y = y;
 	}
 
-	public getPosition(): Vector {
-		return {
-			x: this.x,
-			y: this.y
-		};
-	}
-
 	public duplicate(): Block {
 		return new Block({
 			...this,
@@ -76,6 +69,24 @@ class Block implements Vector {
 			defaultY: this.y,
 			value: JSON.parse(JSON.stringify(this.value))
 		});
+	}
+
+	public iterate(fn: (row: number, col: number, value: number, block: Block) => void | boolean): void {
+		let stopIterating: void | boolean = false;
+		for (let row = 0; row < this.tiles; row++) {
+			if (stopIterating) { break; }
+			for (let col = 0; col < this.tiles; col++) {
+				stopIterating = fn(row, col, this.value[row][col], this);
+				if (stopIterating) { break; }
+			}
+		}
+	}
+
+	public get position(): Vector {
+		return {
+			x: this.x,
+			y: this.y
+		};
 	}
 
 }
