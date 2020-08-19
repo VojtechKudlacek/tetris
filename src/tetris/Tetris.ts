@@ -265,45 +265,48 @@ class Tetris {
 		this.preDrawNextBlock();
 	}
 
-	// EXPOSED
-
-	public init(): void {
-		this.gameSetup();
-		this.domManager.init({
-			onLevelSelect: (level: number) => {
-				this.setLevel(level);
-				this.startGame();
-			},
-			onRestart: () => this.startGame(),
-			onMenu: () => {
-				this.domManager.showScreen('menu');
-				this.inGame = false;
-				this.animating = true;
-			}
-		});
-		this.domManager.showScreen('menu');
-		this.registerEvents();
-		this.animating = true;
-		requestAnimationFrame(this.loop);
-	}
-
-	public setLevel(level: number): void {
+	private setLevel(level: number): void {
 		this.level = level;
 		const newInterval = 500 - (level * 25);
 		this.originalInterval = newInterval;
 		this.interval = newInterval;
 	}
 
-	public startGame(): void {
+	private startGame(): void {
 		this.animating = true;
 		this.inGame = true;
 		this.domManager.showScreen('none');
 		this.gameSetup();
 	}
 
-	public endGame(): void {
+	private endGame(): void {
 		this.animating = true;
 		this.inGame = false;
+	}
+
+	private onLevelSelect(level: number): void {
+		this.setLevel(level);
+		this.startGame();
+	}
+
+	private onMenu(): void {
+		this.endGame();
+		this.domManager.showScreen('menu');
+	}
+
+	// EXPOSED
+
+	public init(): void {
+		this.animating = true;
+		this.gameSetup();
+		this.domManager.init({
+			onLevelSelect: this.onLevelSelect.bind(this),
+			onRestart: this.startGame.bind(this),
+			onMenu: this.onMenu.bind(this),
+		});
+		this.domManager.showScreen('menu');
+		this.registerEvents();
+		requestAnimationFrame(this.loop);
 	}
 
 }
