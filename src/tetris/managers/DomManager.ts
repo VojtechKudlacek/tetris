@@ -54,6 +54,9 @@ class DomManager {
 		const aligner = document.createElement('div');
 		aligner.className = 'tetris-aligner';
 
+		const menuBox = document.createElement('div');
+		menuBox.className = 'tetris-menu-box';
+
 		const title = document.createElement('div');
 		title.className = 'tetris-title';
 		title.innerText = 'CHOOSE LEVEL!';
@@ -71,8 +74,9 @@ class DomManager {
 			buttons.appendChild(button);
 		}
 
-		aligner.appendChild(title)
-		aligner.appendChild(buttons);
+		menuBox.appendChild(title)
+		menuBox.appendChild(buttons)
+		aligner.appendChild(menuBox);
 		parent.appendChild(aligner);
 
 		this.menuScreen = parent;

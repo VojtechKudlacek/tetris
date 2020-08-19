@@ -126,15 +126,6 @@ class Tetris {
 		})
 	}
 
-	private drawMenuBox(): void {
-		const centerX = Math.floor(CONST.CANVAS_WIDTH / 2);
-		const centerY = Math.floor(CONST.CANVAS_HEIGHT / 2);
-		const boxWidth = 250;
-		const boxHeight = 160;
-		Tools.drawRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#000000');
-		Tools.strokeRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#ffffff', 2);
-	}
-
 	/**
 	 * Rendering
 	 */
@@ -152,8 +143,6 @@ class Tetris {
 		} else {
 			// Draw particles
 			this.particleFactory.drawParticles(this.ctx);
-			// Draw menu
-			this.drawMenuBox();
 		}
 	}
 
@@ -170,9 +159,9 @@ class Tetris {
 
 	private processMenu(): void {
 		this.particleFactory.processParticles();
-		if (this.particleFactory.particles.length < 50) {
+		if (this.particleFactory.particles.length < CONST.MENU_PARTICLE_COUNT) {
 			const colors = Object.values(CONST.COLORS);
-			for (let i = this.particleFactory.particles.length; i < 50; i++) {
+			for (let i = this.particleFactory.particles.length; i < CONST.MENU_PARTICLE_COUNT; i++) {
 				this.particleFactory.createParticle(
 					Math.floor(CONST.CANVAS_WIDTH / 2),
 					Math.floor(CONST.CANVAS_HEIGHT / 2),
