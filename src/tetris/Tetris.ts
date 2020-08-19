@@ -3,6 +3,7 @@ import PreRenderer from 'tetris/PreRenderer';
 import ParticleFactory from 'tetris/ParticleFactory';
 import Block from 'tetris/Block';
 import Utils from 'tetris/Utils';
+import ScoreManager from 'tetris/ScoreManager';
 import { BLOCKS, KEYS, SIZES, COLORS } from 'tetris/const';
 
 class Tetris {
@@ -16,9 +17,9 @@ class Tetris {
 	// PreRenderers
 	private gamePreRenderer: PreRenderer = new PreRenderer({ height: SIZES.GAME_HEIGHT, width: SIZES.GAME_WIDTH });
 	private nextBlockPreRenderer: PreRenderer = new PreRenderer({ height: SIZES.NEXT_BLOCK_AREA, width: SIZES.NEXT_BLOCK_AREA });
+	// Score
+	private scoreManager: ScoreManager = new ScoreManager();
 	// Game
-	private score: number = 0;
-	private highScore: number = Number(localStorage.getItem('highScore') || 0);
 	private field: Field = [];
 	private colorField: Field<string | null> = [];
 	private picker: Array<Block> = [];
@@ -52,10 +53,6 @@ class Tetris {
 		return this.picker.splice(Utils.randomFromTo(0, this.picker.length - 1, true), 1)[0];
 	}
 
-	private addScore(combo: number): void {
-		this.score += 10 * combo * this.level;
-	}
-
 	private checFilledRows(): void {
 		let cleared = 0;
 		for (let row = 0; row < SIZES.ROW_COUNT; row++) {
@@ -69,13 +66,13 @@ class Tetris {
 				cleared++;
 				for (let col = 0; col < SIZES.COL_COUNT; col++) {
 					const color = this.colorField[row][col] as string;
-					this.particleFactory.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color, 5, cleared);
+					this.particleFactory.createParticles((col * SIZES.TILE) + SIZES.HALF_TILE, (row * SIZES.TILE) + SIZES.HALF_TILE, color, 5, (cleared * 2));
 				}
 				this.field.splice(row, 1);
 				this.field.unshift(Utils.createArray<number>(SIZES.COL_COUNT, 0));
 				this.colorField.splice(row, 1);
 				this.colorField.unshift(Utils.createArray<null>(SIZES.COL_COUNT, null));
-				this.addScore(cleared);
+				this.scoreManager.add(this.level, cleared - 1);
 			}
 		}
 	}
@@ -86,10 +83,7 @@ class Tetris {
 	}
 
 	private loose(): void {
-		if (this.score > this.highScore) {
-			this.highScore = this.score;
-			localStorage.setItem('highScore', String(this.score));
-		}
+		this.scoreManager.updateHighScore();
 		this.animating = false;
 		this.gameEndSubscriber();
 	}
@@ -138,8 +132,7 @@ class Tetris {
 	private drawCurrentBlock(): void {
 		for (let row = 0; row < this.currentBlock.tiles; row++) {
 			for (let col = 0; col < this.currentBlock.tiles; col++) {
-				const isSolid = this.currentBlock.value[row][col];
-				if (isSolid) {
+				if (this.currentBlock.value[row][col]) {
 					Tools.drawBlock(this.ctx, (this.currentBlock.x + col) * SIZES.TILE, (this.currentBlock.y + row) * SIZES.TILE, this.currentBlock.color);
 				}
 			}
@@ -164,9 +157,9 @@ class Tetris {
 			Tools.drawLine(ctx, SIZES.FIELD_WIDTH + 1, 0, SIZES.FIELD_WIDTH + 1, SIZES.GAME_HEIGHT, '#ffffff');
 			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 20, 'NEXT BLOCK', '#ffffff');
 			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 140, 'SCORE', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 160, String(this.score), '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 160, String(this.scoreManager.Score), '#ffffff');
 			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 180, 'HIGH SCORE', '#ffffff');
-			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 200, String(this.highScore), '#ffffff');
+			Tools.write(ctx, SIZES.FIELD_WIDTH + 10, 200, String(this.scoreManager.HighScore), '#ffffff');
 		});
 	}
 
@@ -195,7 +188,7 @@ class Tetris {
 		const centerX = Math.floor(SIZES.GAME_WIDTH / 2);
 		const centerY = Math.floor(SIZES.GAME_HEIGHT / 2);
 		const boxWidth = 250;
-		const boxHeight = 100;
+		const boxHeight = 140;
 		Tools.drawRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#000000');
 		Tools.strokeRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#ffffff', 2);
 	}
@@ -329,7 +322,7 @@ class Tetris {
 	}
 
 	private gameSetup(): void {
-		this.score = 0;
+		this.scoreManager.restart();
 		this.field = Utils.create2DArray<number>(SIZES.ROW_COUNT, SIZES.COL_COUNT, 0);
 		this.colorField = Utils.create2DArray<null>(SIZES.ROW_COUNT, SIZES.COL_COUNT, null);
 		this.fillPicker();
@@ -350,7 +343,7 @@ class Tetris {
 
 	public setLevel(level: number): void {
 		this.level = level;
-		const newInterval = 500 - (level * 50);
+		const newInterval = 500 - (level * 25);
 		this.originalInterval = newInterval;
 		this.interval = newInterval;
 	}

@@ -48,14 +48,25 @@ class Game extends Component<Properties, State> {
 		this.tetris.startGame();
 	}
 
+	addPadding = (num: number) => {
+		const numStr = String(num);
+		if (numStr.length === 1) {
+			return `0${num}`;
+		}
+		return numStr;
+	}
+
 	renderMenu(): ReactNode {
 		return (
 			<div style={{ width: '100%', height: '100%', display: 'table', position: 'absolute', top: 0, left: 0 }}>
 				<div style={{ display: 'table-cell', verticalAlign: 'middle', textAlign: 'center' }}>
 					<div style={{ fontSize: 20 }}>CHOOSE LEVEL!</div>
-					<div style={{ marginTop: 20 }}>
-						{Array.from({ length: 9 }, (_, index) => (
-							<button style={{ margin: '0 2px' }} key={index} onClick={this.onLevelSelect(index + 1)}>{index + 1}</button>
+					<div style={{ marginTop: 10 }}>
+						{Array.from({ length: 18 }, (_, index) => (
+							<>
+								{!(index % 6) && (index !== 0) && <br />}
+								<button style={{ margin: 2 }} key={index} onClick={this.onLevelSelect(index + 1)}>{this.addPadding(index + 1)}</button>
+							</>
 						))}
 					</div>
 				</div>

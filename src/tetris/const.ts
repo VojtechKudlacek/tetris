@@ -57,9 +57,9 @@ export const BLOCKS: Array<Block> = [
 		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
-			[1, 0, 0],
+			[0, 0, 0],
 			[1, 1, 1],
-			[0, 0, 0]
+			[0, 0, 1]
 		],
 		color: COLORS.GREEN
 	}),
@@ -70,9 +70,9 @@ export const BLOCKS: Array<Block> = [
 		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
-			[0, 0, 1],
+			[0, 0, 0],
 			[1, 1, 1],
-			[0, 0, 0]
+			[1, 0, 0]
 		],
 		color: COLORS.PURPLE
 	}),
@@ -108,9 +108,9 @@ export const BLOCKS: Array<Block> = [
 		defaultX: (SIZES.COL_COUNT / 2) - 1,
 		defaultY: -2,
 		value: [
-			[0, 1, 0],
+			[0, 0, 0],
 			[1, 1, 1],
-			[0, 0, 0]
+			[0, 1, 0]
 		],
 		color: COLORS.RED
 	}),
