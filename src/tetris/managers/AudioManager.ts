@@ -1,14 +1,14 @@
-interface Sounds<T> {
+interface SoundSources<T = string> {
 	FALL?: T;
 }
 
 class AudioManager {
 
-	private readonly SOURCES: Sounds<string> = {
+	private readonly SOURCES: SoundSources = {
 		FALL: 'sounds/fall.wav',
 	};
 
-	private sounds: Sounds<HTMLAudioElement> = {};
+	private sounds: LooseObject<HTMLAudioElement> = {};
 
 	public init(): void {
 		for (let key in this.SOURCES) {
@@ -16,7 +16,7 @@ class AudioManager {
 		}
 	}
 
-	public play(sound: keyof Sounds<HTMLAudioElement>): void {
+	public play(sound: keyof SoundSources): void {
 		if (this.sounds[sound]) {
 			this.sounds[sound].play();
 		}
