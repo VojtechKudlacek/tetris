@@ -173,7 +173,7 @@ class Tetris {
 				this.domManager.showScreen('pause');
 			} else {
 				this.animating = true;
-				this.domManager.showScreen('none');
+				this.domManager.showScreen('ui');
 			}
 			this.controlManager.clearKey('PAUSE');
 		}
@@ -287,7 +287,7 @@ class Tetris {
 	private startGame(): void {
 		this.animating = true;
 		this.inGame = true;
-		this.domManager.showScreen('none');
+		this.domManager.showScreen('ui');
 		this.gameSetup();
 	}
 
@@ -315,7 +315,7 @@ class Tetris {
 			onLevelSelect: this.onLevelSelect.bind(this),
 			onRestart: this.startGame.bind(this),
 			onMenu: this.onMenu.bind(this),
-		});
+		}, this.controlManager.options);
 		this.domManager.showScreen('menu');
 		requestAnimationFrame(this.loop);
 	}

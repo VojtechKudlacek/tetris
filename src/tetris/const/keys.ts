@@ -1,4 +1,4 @@
-export const AVAILABLE_KEYS = {
+export const AVAILABLE_KEYS: NumDictionary<string> = {
 	9: 'Tab',
 	13: 'enter',
 	16: 'Shift',

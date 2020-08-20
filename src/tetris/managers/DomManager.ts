@@ -1,4 +1,4 @@
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from 'tetris/const';
+import { CANVAS_WIDTH, CANVAS_HEIGHT, AVAILABLE_KEYS } from 'tetris/const';
 
 type OnLevelSelect = (level: number) => void;
 type OnRestart = () => void;
@@ -23,6 +23,7 @@ class DomManager {
 	private menuScreen!: HTMLElement;
 	private gameOverScreen!: HTMLElement;
 	private pauseScreen!: HTMLElement;
+	private uiScreen!: HTMLElement;
 
 	private onLevelSelect!: OnLevelSelect;
 	private onRestart!: OnRestart;
@@ -44,6 +45,7 @@ class DomManager {
 		this.menuScreen.style.display = 'none';
 		this.gameOverScreen.style.display = 'none';
 		this.pauseScreen.style.display = 'none';
+		this.uiScreen.style.display = 'none';
 	}
 
 	private createMenu(): void {
@@ -131,6 +133,39 @@ class DomManager {
 		this.pauseScreen = parent;
 	}
 
+	private createUI(keys: KeysReference): void {
+		const parent = document.createElement('div');
+		parent.className = 'tetris-overlay';
+		parent.style.display = 'none';
+
+		const ui = document.createElement('div');
+		ui.className = 'tetris-ui';
+
+		const controls = document.createElement('div');
+		controls.className = 'tetris-controls';
+
+		const availableOptions = [
+			['Left', keys.holdableKeys.LEFT],
+			['Right', keys.holdableKeys.RIGHT],
+			['Rotate Left', keys.pressableKeys.ROTATE_LEFT],
+			['Rotate Right', keys.pressableKeys.ROTATE_RIGHT],
+			['Speed Up', keys.holdableKeys.DOWN],
+			['Pause', keys.pressableKeys.PAUSE],
+		];
+
+		availableOptions.forEach(([label, key]) => {
+			const el = document.createElement('div');
+			el.className = 'tetris-controls-label';
+			el.innerHTML = `<span class="tetris-label">${label}</span><span class="tetris-value">${AVAILABLE_KEYS[key]}</span>`;
+			controls.appendChild(el);
+		});
+
+		ui.appendChild(controls);
+		parent.appendChild(ui);
+
+		this.uiScreen = parent;
+	}
+
 	//* Public
 
 	public createCanvas(): void {
@@ -141,7 +176,7 @@ class DomManager {
 		this.canvas = canvas;
 	}
 
-	public init(actions: Actions): void {
+	public init(actions: Actions, keys: KeysReference): void {
 		// Save actions
 		this.onMenu = actions.onMenu;
 		this.onRestart = actions.onRestart;
@@ -151,21 +186,24 @@ class DomManager {
 		this.parent.style.width = `${CANVAS_WIDTH}px`;
 		this.parent.style.height = `${CANVAS_HEIGHT}px`;
 		// Create screens
-		this.createPause();
+		this.createUI(keys);
 		this.createMenu();
 		this.createGameOver();
+		this.createPause();
 		// Add screens to the DOM
 		this.parent.appendChild(this.canvas);
+		this.parent.appendChild(this.uiScreen);
 		this.parent.appendChild(this.menuScreen);
 		this.parent.appendChild(this.gameOverScreen);
 		this.parent.appendChild(this.pauseScreen);
 	}
 
-	public showScreen(screen: 'none' | 'menu' | 'gameOver' | 'pause'): void {
+	public showScreen(screen: 'ui' | 'menu' | 'gameOver' | 'pause'): void {
 		this.hideScreens();
 		switch (screen) {
 			case 'gameOver':
 				this.gameOverScreen.style.display = '';
+				this.uiScreen.style.display = '';
 				break;
 			case 'menu':
 				this.menuScreen.style.display = '';
@@ -173,7 +211,9 @@ class DomManager {
 			case 'pause':
 				this.pauseScreen.style.display = '';
 				break;
+			case 'ui':
 			default:
+				this.uiScreen.style.display = '';
 				break;
 		}
 	}

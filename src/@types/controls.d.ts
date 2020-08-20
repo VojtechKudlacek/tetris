@@ -11,13 +11,13 @@ interface PressableOptionsBase<T = boolean> {
 	ROTATE_RIGHT: T;
 }
 
-interface StoredCustomKeys {
-	holdableKeys: HoldableOptions<number>;
-	pressableKeys: PressableOptions<number>;
+interface KeysReference {
+	holdableKeys: HoldableOptions;
+	pressableKeys: PressableOptions;
 }
 
-type HoldableOptions<T> = HoldableOptionsBase<T> & Dictionary<T>;
+type HoldableOptions<T = number> = HoldableOptionsBase<T> & Dictionary<T>;
 
-type PressableOptions<T> = PressableOptionsBase<T> & Dictionary<T>;
+type PressableOptions<T = number> = PressableOptionsBase<T> & Dictionary<T>;
 
 type KeyValues = HoldableOptions<boolean | null> & PressableOptions<boolean | null>;

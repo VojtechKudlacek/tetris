@@ -4,14 +4,14 @@ class ControlManager {
 
 	private readonly STORAGE_KEY: string = 'controls';
 
-	private readonly DEFAULT_HOLDABLE_KEYS: HoldableOptions<number> = {
+	private readonly DEFAULT_HOLDABLE_KEYS: HoldableOptions = {
 		LEFT: 37,
 		RIGHT: 39,
 		DOWN: 40,
 		UP: 38,
 	};
 
-	private readonly DEFAULT_PRESSABLE_KEYS: PressableOptions<number> = {
+	private readonly DEFAULT_PRESSABLE_KEYS: PressableOptions = {
 		PAUSE: 80,
 		ROTATE_LEFT: 65,
 		ROTATE_RIGHT: 83,
@@ -19,8 +19,8 @@ class ControlManager {
 
 	//* Private
 
-	private holdableKeys!: HoldableOptions<number>;
-	private pressableKeys!: PressableOptions<number>;
+	private holdableKeys!: HoldableOptions;
+	private pressableKeys!: PressableOptions;
 
 	private keyValues: KeyValues = {
 		LEFT: null,
@@ -40,7 +40,7 @@ class ControlManager {
 	private initKeys(): void {
 		const customKeys = localStorage.getItem(this.STORAGE_KEY);
 		if (customKeys) {
-			const parsedCustomKeys: StoredCustomKeys = JSON.parse(customKeys);
+			const parsedCustomKeys: KeysReference = JSON.parse(customKeys);
 			this.holdableKeys = parsedCustomKeys.holdableKeys;
 			this.pressableKeys = parsedCustomKeys.pressableKeys;
 		} else {
@@ -90,6 +90,13 @@ class ControlManager {
 
 	public get keyPressed(): KeyValues {
 		return this.keyValues;
+	}
+
+	public get options(): KeysReference {
+		return {
+			holdableKeys: this.holdableKeys,
+			pressableKeys: this.pressableKeys,
+		};
 	}
 
 }
