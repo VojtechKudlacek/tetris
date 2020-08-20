@@ -1,14 +1,14 @@
 interface SoundSources<T = string> {
-	FALL?: T;
+	FALL: T;
 }
 
 class AudioManager {
 
-	private readonly SOURCES: SoundSources = {
+	private readonly SOURCES: SoundSources & Dictionary<string> = {
 		FALL: 'sounds/fall.wav',
 	};
 
-	private sounds: LooseObject<HTMLAudioElement> = {};
+	private sounds: Dictionary<HTMLAudioElement> = {};
 
 	public init(): void {
 		for (let key in this.SOURCES) {

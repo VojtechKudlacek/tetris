@@ -2,6 +2,7 @@ import Tools from 'tetris/classes/Tools';
 import PreRenderer from 'tetris/classes/PreRenderer';
 import DomManager from 'tetris/managers/DomManager';
 import ScoreManager from 'tetris/managers/ScoreManager';
+import ControlManager from 'tetris/managers/ControlManager';
 import FieldManager from 'tetris/managers/FieldManager';
 import AudioManager from 'tetris/managers/AudioManager';
 import ParticleFactory from 'tetris/factories/ParticleFactory';
@@ -14,6 +15,7 @@ class Tetris {
 	private ctx: CanvasRenderingContext2D;
 	private domManager: DomManager;
 	private audioManager: AudioManager = new AudioManager();
+	private controlManager: ControlManager = new ControlManager();
 	// Render
 	private animating: boolean = false;
 	private inGame: boolean = false;
@@ -161,6 +163,68 @@ class Tetris {
 	/**
 	 * Game processing
 	 */
+	private processControls(): void {
+		const keyPressed = this.controlManager.keyPressed;
+		const currentBlock = this.blockFactory.currentBlock;
+		// Pause or unpause
+		if (keyPressed.PAUSE) {
+			if (this.animating) {
+				this.animating = false;
+				this.domManager.showScreen('pause');
+			} else {
+				this.animating = true;
+				this.domManager.showScreen('none');
+			}
+			this.controlManager.clearKey('PAUSE');
+		}
+		// Speed up the block or disable bonus speed
+		if (keyPressed.DOWN) {
+			this.interval = 25;
+		} else if (keyPressed.DOWN === false) {
+			this.interval = this.originalInterval;
+			this.controlManager.clearKey('DOWN');
+		}
+		// Freeze the block
+		if (keyPressed.UP) {
+			this.interval = Infinity;
+		} else if (keyPressed.UP === false) {
+			this.interval = this.originalInterval;
+			this.controlManager.clearKey('UP');
+		}
+		// Move the block left
+		if (keyPressed.LEFT) {
+			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
+				currentBlock.setX(currentBlock.x - 1);
+			}
+			this.controlManager.clearKey('LEFT');
+		}
+		// Move the block right
+		if (keyPressed.RIGHT) {
+			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
+				currentBlock.setX(currentBlock.x + 1);
+			}
+			this.controlManager.clearKey('RIGHT');
+		}
+		// Rotate the block anticlockwise
+		if (keyPressed.ROTATE_LEFT) {
+			const newBlock = currentBlock.duplicate();
+			newBlock.rotateLeft();
+			if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
+				this.blockFactory.currentBlock = newBlock;
+			}
+			this.controlManager.clearKey('ROTATE_LEFT');
+		}
+		// Rotate the block clockwise
+		if (keyPressed.ROTATE_RIGHT) {
+			const newBlock = currentBlock.duplicate();
+			newBlock.rotateRight();
+			if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
+				this.blockFactory.currentBlock = newBlock;
+			}
+			this.controlManager.clearKey('ROTATE_RIGHT');
+		}
+	}
+
 	private processGame(delta: number): void {
 		this.particleFactory.processParticles();
 		if (delta - this.lastUpdateTime > this.interval) {
@@ -189,6 +253,9 @@ class Tetris {
 	 * @param delta Time spent in game
 	 */
 	private loop = (delta: number): void => {
+		if (this.inGame) {
+			this.processControls();
+		}
 		if (this.animating) {
 			this.render();
 			if (this.inGame) {
@@ -200,80 +267,12 @@ class Tetris {
 		requestAnimationFrame(this.loop)
 	}
 
-	private registerEvents(): void {
-		window.addEventListener('keyup', (e) => {
-			switch (e.keyCode) {
-				case CONST.KEYS.UP:
-				case CONST.KEYS.DOWN:
-					this.interval = this.originalInterval;
-					break;
-				default:
-					break
-			}
-		});
-
-		window.addEventListener('keydown', (e) => {
-			if (!this.animating && e.keyCode !== CONST.KEYS.P) {
-				return;
-			}
-			const currentBlock = this.blockFactory.currentBlock;
-			switch (e.keyCode) {
-				case CONST.KEYS.LEFT:
-					if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
-						currentBlock.setX(currentBlock.x - 1);
-					}
-					break
-				case CONST.KEYS.RIGHT:
-					if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
-						currentBlock.setX(currentBlock.x + 1);
-					}
-					break;
-				case CONST.KEYS.DOWN:
-					if (this.interval === this.originalInterval) {
-						this.interval = 25;
-					}
-					break;
-				case CONST.KEYS.UP:
-					this.interval = Infinity;
-					break;
-				case CONST.KEYS.A: {
-					const newBlock = currentBlock.duplicate();
-					newBlock.rotateLeft();
-					if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
-						this.blockFactory.currentBlock = newBlock;
-					}
-					break;
-				}
-				case CONST.KEYS.S: {
-					const newBlock = currentBlock.duplicate();
-					newBlock.rotateRight();
-					if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
-						this.blockFactory.currentBlock = newBlock;
-					}
-					break;
-				}
-				case CONST.KEYS.P:
-					if (this.inGame) {
-						if (this.animating) {
-							this.animating = false;
-							this.domManager.showScreen('pause');
-						} else {
-							this.animating = true;
-							this.domManager.showScreen('none');
-						}
-					}
-					break;
-				default:
-					break
-			}
-		});
-	}
-
 	private gameSetup(): void {
 		this.fieldManager.init();
 		this.scoreManager.init();
 		this.blockFactory.init();
 		this.audioManager.init();
+		this.controlManager.init();
 		this.preDrawGame();
 		this.preDrawNextBlock();
 	}
@@ -318,7 +317,6 @@ class Tetris {
 			onMenu: this.onMenu.bind(this),
 		});
 		this.domManager.showScreen('menu');
-		this.registerEvents();
 		requestAnimationFrame(this.loop);
 	}
 
