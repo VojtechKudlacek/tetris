@@ -3,6 +3,7 @@ import PreRenderer from 'tetris/classes/PreRenderer';
 import DomManager from 'tetris/managers/DomManager';
 import ScoreManager from 'tetris/managers/ScoreManager';
 import FieldManager from 'tetris/managers/FieldManager';
+import AudioManager from 'tetris/managers/AudioManager';
 import ParticleFactory from 'tetris/factories/ParticleFactory';
 import BlockFactory from 'tetris/factories/BlockFactory';
 import * as CONST from 'tetris/const';
@@ -12,6 +13,7 @@ class Tetris {
 	// DOM
 	private ctx: CanvasRenderingContext2D;
 	private domManager: DomManager;
+	private audioManager: AudioManager = new AudioManager();
 	// Render
 	private animating: boolean = false;
 	private inGame: boolean = false;
@@ -53,6 +55,7 @@ class Tetris {
 		} else {
 			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
 			if (this.interval < this.originalInterval) {
+				this.audioManager.play('FALL');
 				this.blockFactory.currentBlock.iterate((row, col, value, block) => {
 					if (value) {
 						const x = ((col + block.x) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
@@ -270,6 +273,7 @@ class Tetris {
 		this.fieldManager.init();
 		this.scoreManager.init();
 		this.blockFactory.init();
+		this.audioManager.init();
 		this.preDrawGame();
 		this.preDrawNextBlock();
 	}
