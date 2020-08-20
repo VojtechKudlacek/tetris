@@ -64,9 +64,6 @@ class DomManager {
 		const buttons = document.createElement('div');
 		buttons.className = 'tetris-levels';
 		for (let level = 0; level < this.LEVEL_COUNT; level++) {
-			if (!(level % 6) && (level !== 0) && (level !== 18)) {
-				buttons.appendChild(document.createElement('br'));
-			}
 			const button = document.createElement('button');
 			button.addEventListener('click', () => this.onLevelSelect(level + 1))
 			button.innerText = String(level + 1);

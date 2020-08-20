@@ -52,11 +52,20 @@ class Tetris {
 			currentBlock.setY(currentBlock.y + 1);
 		} else {
 			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
+			if (this.interval < this.originalInterval) {
+				this.blockFactory.currentBlock.iterate((row, col, value, block) => {
+					if (value) {
+						const x = ((col + block.x) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
+						const y = ((row + block.y) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
+						this.particleFactory.createParticles(x, y, block.color, 3, -1);
+					}
+				})
+			}
 			this.fieldManager.checkAndClearFilledRows((row, cleared) => {
 				this.fieldManager.iterateCols(row, (col, _, color) => {
 					const x = (col * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
 					const y = (row * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
-					this.particleFactory.createParticles(x, y, color, 5, (cleared * 2));
+					this.particleFactory.createParticles(x, y, color, 5, (cleared * 3));
 				});
 				this.scoreManager.add(this.level, cleared - 1);
 			});
@@ -218,7 +227,7 @@ class Tetris {
 					break;
 				case CONST.KEYS.DOWN:
 					if (this.interval === this.originalInterval) {
-						this.interval = Math.floor(this.interval / 4);
+						this.interval = 25;
 					}
 					break;
 				case CONST.KEYS.UP:
@@ -267,7 +276,7 @@ class Tetris {
 
 	private setLevel(level: number): void {
 		this.level = level;
-		const newInterval = 500 - (level * 25);
+		const newInterval = 475 - (level * 25);
 		this.originalInterval = newInterval;
 		this.interval = newInterval;
 	}
