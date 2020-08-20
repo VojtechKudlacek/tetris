@@ -54,6 +54,9 @@ class DomManager {
 		const aligner = document.createElement('div');
 		aligner.className = 'tetris-aligner';
 
+		const menuBox = document.createElement('div');
+		menuBox.className = 'tetris-menu-box';
+
 		const title = document.createElement('div');
 		title.className = 'tetris-title';
 		title.innerText = 'CHOOSE LEVEL!';
@@ -61,9 +64,6 @@ class DomManager {
 		const buttons = document.createElement('div');
 		buttons.className = 'tetris-levels';
 		for (let level = 0; level < this.LEVEL_COUNT; level++) {
-			if (!(level % 6) && (level !== 0) && (level !== 18)) {
-				buttons.appendChild(document.createElement('br'));
-			}
 			const button = document.createElement('button');
 			button.addEventListener('click', () => this.onLevelSelect(level + 1))
 			button.innerText = String(level + 1);
@@ -71,8 +71,9 @@ class DomManager {
 			buttons.appendChild(button);
 		}
 
-		aligner.appendChild(title)
-		aligner.appendChild(buttons);
+		menuBox.appendChild(title)
+		menuBox.appendChild(buttons)
+		aligner.appendChild(menuBox);
 		parent.appendChild(aligner);
 
 		this.menuScreen = parent;

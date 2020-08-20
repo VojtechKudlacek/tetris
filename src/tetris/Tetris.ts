@@ -52,11 +52,20 @@ class Tetris {
 			currentBlock.setY(currentBlock.y + 1);
 		} else {
 			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
+			if (this.interval < this.originalInterval) {
+				this.blockFactory.currentBlock.iterate((row, col, value, block) => {
+					if (value) {
+						const x = ((col + block.x) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
+						const y = ((row + block.y) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
+						this.particleFactory.createParticles(x, y, block.color, 3, -1);
+					}
+				})
+			}
 			this.fieldManager.checkAndClearFilledRows((row, cleared) => {
 				this.fieldManager.iterateCols(row, (col, _, color) => {
 					const x = (col * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
 					const y = (row * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
-					this.particleFactory.createParticles(x, y, color, 5, (cleared * 2));
+					this.particleFactory.createParticles(x, y, color, 5, (cleared * 3));
 				});
 				this.scoreManager.add(this.level, cleared - 1);
 			});
@@ -126,15 +135,6 @@ class Tetris {
 		})
 	}
 
-	private drawMenuBox(): void {
-		const centerX = Math.floor(CONST.CANVAS_WIDTH / 2);
-		const centerY = Math.floor(CONST.CANVAS_HEIGHT / 2);
-		const boxWidth = 250;
-		const boxHeight = 160;
-		Tools.drawRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#000000');
-		Tools.strokeRect(this.ctx, centerX - (boxWidth / 2), centerY - (boxHeight / 2), boxWidth, boxHeight, '#ffffff', 2);
-	}
-
 	/**
 	 * Rendering
 	 */
@@ -152,8 +152,6 @@ class Tetris {
 		} else {
 			// Draw particles
 			this.particleFactory.drawParticles(this.ctx);
-			// Draw menu
-			this.drawMenuBox();
 		}
 	}
 
@@ -170,9 +168,9 @@ class Tetris {
 
 	private processMenu(): void {
 		this.particleFactory.processParticles();
-		if (this.particleFactory.particles.length < 50) {
+		if (this.particleFactory.particles.length < CONST.MENU_PARTICLE_COUNT) {
 			const colors = Object.values(CONST.COLORS);
-			for (let i = this.particleFactory.particles.length; i < 50; i++) {
+			for (let i = this.particleFactory.particles.length; i < CONST.MENU_PARTICLE_COUNT; i++) {
 				this.particleFactory.createParticle(
 					Math.floor(CONST.CANVAS_WIDTH / 2),
 					Math.floor(CONST.CANVAS_HEIGHT / 2),
@@ -229,7 +227,7 @@ class Tetris {
 					break;
 				case CONST.KEYS.DOWN:
 					if (this.interval === this.originalInterval) {
-						this.interval = Math.floor(this.interval / 4);
+						this.interval = 25;
 					}
 					break;
 				case CONST.KEYS.UP:
@@ -276,45 +274,48 @@ class Tetris {
 		this.preDrawNextBlock();
 	}
 
-	// EXPOSED
-
-	public init(): void {
-		this.gameSetup();
-		this.domManager.init({
-			onLevelSelect: (level: number) => {
-				this.setLevel(level);
-				this.startGame();
-			},
-			onRestart: () => this.startGame(),
-			onMenu: () => {
-				this.domManager.showScreen('menu');
-				this.inGame = false;
-				this.animating = true;
-			}
-		});
-		this.domManager.showScreen('menu');
-		this.registerEvents();
-		this.animating = true;
-		requestAnimationFrame(this.loop);
-	}
-
-	public setLevel(level: number): void {
+	private setLevel(level: number): void {
 		this.level = level;
-		const newInterval = 500 - (level * 25);
+		const newInterval = 475 - (level * 25);
 		this.originalInterval = newInterval;
 		this.interval = newInterval;
 	}
 
-	public startGame(): void {
+	private startGame(): void {
 		this.animating = true;
 		this.inGame = true;
 		this.domManager.showScreen('none');
 		this.gameSetup();
 	}
 
-	public endGame(): void {
+	private endGame(): void {
 		this.animating = true;
 		this.inGame = false;
+	}
+
+	private onLevelSelect(level: number): void {
+		this.setLevel(level);
+		this.startGame();
+	}
+
+	private onMenu(): void {
+		this.endGame();
+		this.domManager.showScreen('menu');
+	}
+
+	// EXPOSED
+
+	public init(): void {
+		this.animating = true;
+		this.gameSetup();
+		this.domManager.init({
+			onLevelSelect: this.onLevelSelect.bind(this),
+			onRestart: this.startGame.bind(this),
+			onMenu: this.onMenu.bind(this),
+		});
+		this.domManager.showScreen('menu');
+		this.registerEvents();
+		requestAnimationFrame(this.loop);
 	}
 
 }
