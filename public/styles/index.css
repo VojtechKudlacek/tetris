@@ -76,6 +76,39 @@ code {
 	padding-top: 15px;
 }
 
+.tetris-ui {
+	width: 100%;
+	height: 100%;
+	position: relative;
+}
+
+.tetris-controls {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 100px;
+	padding: 5px;
+}
+
+.tetris-controls-label {
+	font-size: 12px;
+	margin-bottom: 5px;
+}
+
+.tetris-controls-label:last-child {
+	margin-bottom: 0;
+}
+
+.tetris-controls-label .tetris-label {
+	display: block;
+	font-weight: bold;
+	text-decoration: underline;
+}
+
+.tetris-controls-label .tetris-value {
+	display: block;
+}
+
 .tetris-title {
 	font-size: 20px;
 }

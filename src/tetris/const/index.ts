@@ -1,23 +1,5 @@
-export const KEYS = {
-	LEFT: 37,
-	UP: 38,
-	RIGHT: 39,
-	DOWN: 40,
-	SPACE: 32,
-	P: 80,
-	A: 65,
-	S: 83,
-};
-
-export const COLORS = {
-	BLUE: '#00D9FF',
-	GREEN: '#13FF00',
-	PURPLE: '#B200FF',
-	ORANGE: '#FF8C00',
-	PINK: '#FF00D1',
-	RED: '#FF1C23',
-	YELLOW: '#EAE800'
-};
+export { COLORS } from './colors';
+export { AVAILABLE_KEYS } from './keys';
 
 // Game sizes
 export const ROW_COUNT = 20;
