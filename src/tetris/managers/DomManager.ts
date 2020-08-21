@@ -1,13 +1,9 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, AVAILABLE_KEYS } from 'tetris/const';
 
-type OnLevelSelect = (level: number) => void;
-type OnRestart = () => void;
-type OnMenu = () => void;
-
 interface Actions {
-	onLevelSelect: OnLevelSelect;
-	onRestart: OnRestart;
-	onMenu: OnMenu;
+	onLevelSelect: (level: number) => void;
+	onRestart: VoidFunction;
+	onMenu: VoidFunction;
 }
 
 class DomManager {
@@ -19,15 +15,13 @@ class DomManager {
 	//* Private
 
 	private parent: HTMLElement;
+	private scoreElement!: HTMLElement;
+	private highScoreElement!: HTMLElement;
 
 	private menuScreen!: HTMLElement;
 	private gameOverScreen!: HTMLElement;
 	private pauseScreen!: HTMLElement;
 	private uiScreen!: HTMLElement;
-
-	private onLevelSelect!: OnLevelSelect;
-	private onRestart!: OnRestart;
-	private onMenu!: OnMenu;
 
 	//* Public
 
@@ -48,7 +42,19 @@ class DomManager {
 		this.uiScreen.style.display = 'none';
 	}
 
-	private createMenu(): void {
+	private createScoreElements(): void {
+		const scoreElement = document.createElement('span');
+		scoreElement.className = 'tetris-value';
+		scoreElement.innerText = '0';
+		this.scoreElement = scoreElement;
+
+		const highScoreElement = document.createElement('span');
+		highScoreElement.className = 'tetris-value';
+		highScoreElement.innerText = '0';
+		this.highScoreElement = highScoreElement;
+	}
+
+	private createMenu(onLevelSelect: (level: number) => void): void {
 		const parent = document.createElement('div');
 		parent.className = 'tetris-overlay';
 		parent.style.display = 'none';
@@ -67,7 +73,7 @@ class DomManager {
 		buttons.className = 'tetris-levels';
 		for (let level = 0; level < this.LEVEL_COUNT; level++) {
 			const button = document.createElement('button');
-			button.addEventListener('click', () => this.onLevelSelect(level + 1))
+			button.addEventListener('click', () => onLevelSelect(level + 1))
 			button.innerText = String(level + 1);
 			button.className = 'tetris-button tetris-level';
 			buttons.appendChild(button);
@@ -81,7 +87,7 @@ class DomManager {
 		this.menuScreen = parent;
 	}
 
-	private createGameOver(): void {
+	private createGameOver(onMenu: VoidFunction, onRestart: VoidFunction): void {
 		const parent = document.createElement('div');
 		parent.className = 'tetris-overlay tetris-dark-overlay';
 		parent.style.display = 'none';
@@ -99,12 +105,12 @@ class DomManager {
 		const retryButton = document.createElement('button');
 		retryButton.className = 'tetris-button';
 		retryButton.innerText = 'Retry';
-		retryButton.addEventListener('click', () => this.onRestart());
+		retryButton.addEventListener('click', () => onRestart());
 
 		const mainMenuButton = document.createElement('button');
 		mainMenuButton.className = 'tetris-button';
 		mainMenuButton.innerText = 'Main Menu';
-		mainMenuButton.addEventListener('click', () => this.onMenu());
+		mainMenuButton.addEventListener('click', () => onMenu());
 
 		buttons.appendChild(retryButton);
 		buttons.appendChild(mainMenuButton);
@@ -141,6 +147,21 @@ class DomManager {
 		const ui = document.createElement('div');
 		ui.className = 'tetris-ui';
 
+		const gameStats = document.createElement('div');
+		gameStats.className = 'tetris-stats';
+
+		const nextBlockLabel = document.createElement('span');
+		nextBlockLabel.className = 'tetris-label tetris-next-block';
+		nextBlockLabel.innerText = 'NEXT BLOCK';
+
+		const scoreLabel = document.createElement('span');
+		scoreLabel.className = 'tetris-label';
+		scoreLabel.innerText = 'SCORE';
+
+		const highScoreLabel = document.createElement('span');
+		highScoreLabel.className = 'tetris-label';
+		highScoreLabel.innerText = 'HIGH SCORE';
+
 		const controls = document.createElement('div');
 		controls.className = 'tetris-controls';
 
@@ -160,6 +181,12 @@ class DomManager {
 			controls.appendChild(el);
 		});
 
+		gameStats.appendChild(nextBlockLabel);
+		gameStats.appendChild(scoreLabel);
+		gameStats.appendChild(this.scoreElement);
+		gameStats.appendChild(highScoreLabel);
+		gameStats.appendChild(this.highScoreElement);
+		ui.appendChild(gameStats);
 		ui.appendChild(controls);
 		parent.appendChild(ui);
 
@@ -177,20 +204,18 @@ class DomManager {
 	}
 
 	public init(actions: Actions, keys: KeysReference): void {
-		// Save actions
-		this.onMenu = actions.onMenu;
-		this.onRestart = actions.onRestart;
-		this.onLevelSelect = actions.onLevelSelect;
 		// Update given element
 		this.parent.className = 'tetris';
 		this.parent.style.width = `${CANVAS_WIDTH}px`;
 		this.parent.style.height = `${CANVAS_HEIGHT}px`;
 		// Create screens
+		this.createScoreElements();
 		this.createUI(keys);
-		this.createMenu();
-		this.createGameOver();
+		this.createMenu(actions.onLevelSelect);
+		this.createGameOver(actions.onMenu, actions.onRestart);
 		this.createPause();
 		// Add screens to the DOM
+		this.parent.innerHTML = '';
 		this.parent.appendChild(this.canvas);
 		this.parent.appendChild(this.uiScreen);
 		this.parent.appendChild(this.menuScreen);
@@ -212,9 +237,21 @@ class DomManager {
 				this.pauseScreen.style.display = '';
 				break;
 			case 'ui':
-			default:
 				this.uiScreen.style.display = '';
+			default:
 				break;
+		}
+	}
+
+	public setScore(score: number): void {
+		if (this.scoreElement) {
+			this.scoreElement.innerText = String(score);
+		}
+	}
+
+	public setHighScore(score: number): void {
+		if (this.highScoreElement) {
+			this.highScoreElement.innerText = String(score);
 		}
 	}
 

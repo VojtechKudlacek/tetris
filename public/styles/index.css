@@ -82,6 +82,29 @@ code {
 	position: relative;
 }
 
+.tetris-stats {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100px;
+	padding: 5px;
+}
+
+.tetris-stats .tetris-label {
+	display: block;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.tetris-stats .tetris-label.tetris-next-block {
+	margin-bottom: 100px;
+}
+
+.tetris-stats .tetris-value {
+	display: block;
+	margin-bottom: 5px;
+}
+
 .tetris-controls {
 	position: absolute;
 	right: 0;

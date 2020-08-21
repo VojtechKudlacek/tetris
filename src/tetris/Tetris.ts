@@ -1,5 +1,4 @@
-import Tools from 'tetris/classes/Tools';
-import PreRenderer from 'tetris/classes/PreRenderer';
+import RenderingTools from 'tetris/classes/RenderingTools';
 import DomManager from 'tetris/managers/DomManager';
 import ScoreManager from 'tetris/managers/ScoreManager';
 import ControlManager from 'tetris/managers/ControlManager';
@@ -16,12 +15,10 @@ class Tetris {
 	private domManager: DomManager;
 	private audioManager: AudioManager = new AudioManager();
 	private controlManager: ControlManager = new ControlManager();
+	private renderingTools: RenderingTools;
 	// Render
 	private animating: boolean = false;
 	private inGame: boolean = false;
-	// PreRenderers
-	private gamePreRenderer: PreRenderer = new PreRenderer({ height: CONST.CANVAS_HEIGHT, width: CONST.CANVAS_WIDTH });
-	private nextBlockPreRenderer: PreRenderer = new PreRenderer({ height: CONST.NEXT_BLOCK_AREA, width: CONST.NEXT_BLOCK_AREA });
 	// Score
 	private scoreManager: ScoreManager = new ScoreManager();
 	// Game
@@ -40,10 +37,12 @@ class Tetris {
 		this.domManager = new DomManager(parent);
 		this.domManager.createCanvas();
 		this.ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+		this.renderingTools = new RenderingTools(this.ctx);
 	}
 
 	private loose(): void {
 		this.scoreManager.updateHighScore();
+		this.domManager.setHighScore(this.scoreManager.highScore);
 		this.animating = false;
 		this.domManager.showScreen('gameOver');
 	}
@@ -79,81 +78,27 @@ class Tetris {
 				this.loose();
 			} else {
 				this.blockFactory.useNextBlock();
-				this.preDrawGame();
-				this.preDrawNextBlock();
+				this.domManager.setScore(this.scoreManager.score);
+				this.renderingTools.preDrawGame(this.fieldManager);
+				this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 			}
 		}
-	}
-
-	// Drawing
-
-	private drawCurrentBlock(): void {
-		this.blockFactory.currentBlock.iterate((row, col, value, block) => {
-			if (value) {
-				const x = (block.x + col) * CONST.TILE_SIZE;
-				const y = (block.y + row) * CONST.TILE_SIZE;
-				Tools.drawBlock(this.ctx, x, y, block.color);
-			}
-		});
-	}
-
-	private preDrawGame(): void {
-		this.gamePreRenderer.draw((ctx, w, h) => {
-			// Fill are with black color
-			Tools.fill(ctx, w, h, '#000000');
-			// Draw filled blocks with its color
-			this.fieldManager.iterate((row, col, value, color) => {
-				if (value) {
-					Tools.drawBlock(ctx, col * CONST.TILE_SIZE, row * CONST.TILE_SIZE, color);
-				}
-			});
-			// Draw sidebar
-			Tools.drawRect(ctx, CONST.GAME_WIDTH, 0, CONST.SIDEBAR_BORDER_WIDTH + CONST.SIDEBAR_WIDTH, CONST.CANVAS_HEIGHT, '#000000');
-			Tools.drawLine(ctx, CONST.GAME_WIDTH + 1, 0, CONST.GAME_WIDTH + 1, CONST.CANVAS_HEIGHT, '#ffffff');
-			Tools.write(ctx, CONST.GAME_WIDTH + 10, 20, 'NEXT BLOCK', '#ffffff');
-			Tools.write(ctx, CONST.GAME_WIDTH + 10, 140, 'SCORE', '#ffffff');
-			Tools.write(ctx, CONST.GAME_WIDTH + 10, 160, String(this.scoreManager.score), '#ffffff');
-			Tools.write(ctx, CONST.GAME_WIDTH + 10, 180, 'HIGH SCORE', '#ffffff');
-			Tools.write(ctx, CONST.GAME_WIDTH + 10, 200, String(this.scoreManager.highScore), '#ffffff');
-		});
-	}
-
-	private preDrawNextBlock(): void {
-		this.nextBlockPreRenderer.draw((ctx, w, h) => {
-			// Fill are with black color
-			Tools.fill(ctx, w, h, '#000000');
-			// Draw the next block
-			const drawTileSize = (CONST.NEXT_BLOCK_AREA - (CONST.NEXT_BLOCK_AREA_PADDING * 2)) / CONST.NEXT_BLOCK_ARE_TILE_COUNT;
-			const nextBlock = this.blockFactory.nextBlock;
-			// This is a bit of a hack, since all of the blocks are always vertically longer than horizontally
-			const horizontalPadding = ((drawTileSize * (CONST.NEXT_BLOCK_ARE_TILE_COUNT - nextBlock.preview[0].length)) / 2) + CONST.NEXT_BLOCK_AREA_PADDING;
-			const verticalPadding = ((drawTileSize * (CONST.NEXT_BLOCK_ARE_TILE_COUNT - nextBlock.preview.length)) / 2) + CONST.NEXT_BLOCK_AREA_PADDING;
-			for (let row = 0; row < nextBlock.preview.length; row++) {
-				for (let col = 0; col < nextBlock.preview[0].length; col++) {
-					if (nextBlock.preview[row][col]) {
-						const x = (col * drawTileSize) + horizontalPadding;
-						const y = (row * drawTileSize) + verticalPadding;
-						Tools.drawBlock(ctx, x, y, nextBlock.color, drawTileSize);
-					}
-				}
-			}
-		})
 	}
 
 	/**
 	 * Rendering
 	 */
 	private render(): void {
-		Tools.clear(this.ctx, CONST.CANVAS_WIDTH, CONST.CANVAS_HEIGHT);
+		this.renderingTools.clear();
 		if (this.inGame) {
 			// Draw game
-			Tools.drawPreRender(this.ctx, this.gamePreRenderer.image, 0, 0);
+			this.renderingTools.drawGame();
 			// Draw next block
-			Tools.drawPreRender(this.ctx, this.nextBlockPreRenderer.image, CONST.GAME_WIDTH + 7, 30);
+			this.renderingTools.drawNextBlock();
 			// Draw particles
 			this.particleFactory.drawParticles(this.ctx);
 			// Draw current block
-			this.drawCurrentBlock();
+			this.renderingTools.drawCurrentBlock(this.blockFactory.currentBlock);
 		} else {
 			// Draw particles
 			this.particleFactory.drawParticles(this.ctx);
@@ -269,12 +214,13 @@ class Tetris {
 
 	private gameSetup(): void {
 		this.fieldManager.init();
-		this.scoreManager.init();
 		this.blockFactory.init();
 		this.audioManager.init();
+		this.scoreManager.init();
 		this.controlManager.init();
-		this.preDrawGame();
-		this.preDrawNextBlock();
+		this.domManager.setScore(this.scoreManager.score);
+		this.renderingTools.preDrawGame(this.fieldManager);
+		this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 	}
 
 	private setLevel(level: number): void {
@@ -316,6 +262,7 @@ class Tetris {
 			onRestart: this.startGame.bind(this),
 			onMenu: this.onMenu.bind(this),
 		}, this.controlManager.options);
+		this.domManager.setHighScore(this.scoreManager.highScore);
 		this.domManager.showScreen('menu');
 		requestAnimationFrame(this.loop);
 	}

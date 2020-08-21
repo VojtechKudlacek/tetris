@@ -11,7 +11,7 @@ export const HALF_TILE_SIZE = Math.floor(TILE_SIZE / 2);
 export const SIDEBAR_WIDTH = 100;
 export const SIDEBAR_BORDER_WIDTH = 2;
 // Next block area
-export const NEXT_BLOCK_AREA = SIDEBAR_WIDTH - SIDEBAR_BORDER_WIDTH - 10;
+export const NEXT_BLOCK_AREA = SIDEBAR_WIDTH - 10;
 export const NEXT_BLOCK_AREA_PADDING = 5;
 export const NEXT_BLOCK_ARE_TILE_COUNT = 4;
 // Game and canvas
