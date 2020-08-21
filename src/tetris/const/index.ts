@@ -20,3 +20,5 @@ export const CANVAS_WIDTH = GAME_WIDTH + SIDEBAR_BORDER_WIDTH + SIDEBAR_WIDTH;
 export const CANVAS_HEIGHT = TILE_SIZE * ROW_COUNT;
 // Menu
 export const MENU_PARTICLE_COUNT = 100;
+// Speed
+export const SLAM_INTERVAL = 25;

@@ -55,8 +55,7 @@ class Tetris {
 			currentBlock.setY(currentBlock.y + 1);
 		} else {
 			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
-			if (this.interval < this.originalInterval) {
-				this.audioManager.play('FALL');
+			if (this.interval <= CONST.SLAM_INTERVAL) {
 				this.blockFactory.currentBlock.iterate((row, col, value, block) => {
 					if (value) {
 						const x = ((col + block.x) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
@@ -124,7 +123,7 @@ class Tetris {
 		}
 		// Speed up the block or disable bonus speed
 		if (keyPressed.DOWN) {
-			this.interval = 25;
+			this.interval = CONST.SLAM_INTERVAL;
 		} else if (keyPressed.DOWN === false) {
 			this.interval = this.originalInterval;
 			this.controlManager.clearKey('DOWN');

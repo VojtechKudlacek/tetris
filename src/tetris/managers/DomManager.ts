@@ -15,8 +15,11 @@ class DomManager {
 	//* Private
 
 	private parent: HTMLElement;
+
 	private scoreElement!: HTMLElement;
 	private highScoreElement!: HTMLElement;
+	private gameOverScoreElement!: HTMLElement;
+	private gameOverHighScoreElement!: HTMLElement;
 
 	private menuScreen!: HTMLElement;
 	private gameOverScreen!: HTMLElement;
@@ -42,16 +45,18 @@ class DomManager {
 		this.uiScreen.style.display = 'none';
 	}
 
-	private createScoreElements(): void {
-		const scoreElement = document.createElement('span');
-		scoreElement.className = 'tetris-value';
-		scoreElement.innerText = '0';
-		this.scoreElement = scoreElement;
+	private createScoreElement(): HTMLElement {
+		const el = document.createElement('span');
+		el.className = 'tetris-value';
+		el.innerText = '0';
+		return el;
+	}
 
-		const highScoreElement = document.createElement('span');
-		highScoreElement.className = 'tetris-value';
-		highScoreElement.innerText = '0';
-		this.highScoreElement = highScoreElement;
+	private createScoreElements(): void {
+		this.scoreElement = this.createScoreElement();
+		this.highScoreElement = this.createScoreElement();
+		this.gameOverScoreElement = this.createScoreElement();
+		this.gameOverHighScoreElement = this.createScoreElement();
 	}
 
 	private createMenu(onLevelSelect: (level: number) => void): void {
@@ -99,6 +104,23 @@ class DomManager {
 		title.className = 'tetris-title';
 		title.innerText = 'GAME OVER!';
 
+		const score = document.createElement('div');
+		score.className = 'tetris-gameover-score';
+
+		const scoreBox = document.createElement('div');
+		scoreBox.className = 'tetris-gameover-score-box';
+
+		const highScoreBox = document.createElement('div');
+		highScoreBox.className = 'tetris-gameover-score-box';
+
+		const scoreLabel = document.createElement('span');
+		scoreLabel.className = 'tetris-label';
+		scoreLabel.innerText = 'SCORE';
+
+		const highScoreLabel = document.createElement('span');
+		highScoreLabel.className = 'tetris-label';
+		highScoreLabel.innerText = 'HIGH SCORE';
+
 		const buttons = document.createElement('div');
 		buttons.className = 'tetris-buttons';
 
@@ -114,7 +136,14 @@ class DomManager {
 
 		buttons.appendChild(retryButton);
 		buttons.appendChild(mainMenuButton);
+		scoreBox.appendChild(scoreLabel);
+		scoreBox.appendChild(this.gameOverScoreElement)
+		highScoreBox.appendChild(highScoreLabel);
+		highScoreBox.appendChild(this.gameOverHighScoreElement);
+		score.appendChild(scoreBox);
+		score.appendChild(highScoreBox);
 		aligner.appendChild(title);
+		aligner.appendChild(score);
 		aligner.appendChild(buttons);
 		parent.appendChild(aligner);
 
@@ -244,15 +273,13 @@ class DomManager {
 	}
 
 	public setScore(score: number): void {
-		if (this.scoreElement) {
-			this.scoreElement.innerText = String(score);
-		}
+		if (this.scoreElement) { this.scoreElement.innerText = String(score); }
+		if (this.gameOverScoreElement) { this.gameOverScoreElement.innerText = String(score); }
 	}
 
 	public setHighScore(score: number): void {
-		if (this.highScoreElement) {
-			this.highScoreElement.innerText = String(score);
-		}
+		if (this.highScoreElement) { this.highScoreElement.innerText = String(score); }
+		if (this.gameOverHighScoreElement) { this.gameOverHighScoreElement.innerText = String(score); }
 	}
 
 }

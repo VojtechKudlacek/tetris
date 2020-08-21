@@ -132,6 +132,26 @@ code {
 	display: block;
 }
 
+.tetris-gameover-score {
+	text-align: center;
+	padding: 10px 0;
+}
+
+.tetris-gameover-score-box {
+	display: inline-block;
+	margin: 0 10px;
+}
+
+.tetris-gameover-score-box .tetris-label,
+.tetris-gameover-score-box .tetris-value {
+	display: block;
+}
+
+.tetris-gameover-score-box .tetris-label {
+	font-weight: bold;
+	text-decoration: underline;
+}
+
 .tetris-title {
 	font-size: 20px;
 }
