@@ -82,6 +82,29 @@ code {
 	position: relative;
 }
 
+.tetris-stats {
+	position: absolute;
+	right: 0;
+	top: 0;
+	width: 100px;
+	padding: 5px;
+}
+
+.tetris-stats .tetris-label {
+	display: block;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.tetris-stats .tetris-label.tetris-next-block {
+	margin-bottom: 100px;
+}
+
+.tetris-stats .tetris-value {
+	display: block;
+	margin-bottom: 5px;
+}
+
 .tetris-controls {
 	position: absolute;
 	right: 0;
@@ -107,6 +130,26 @@ code {
 
 .tetris-controls-label .tetris-value {
 	display: block;
+}
+
+.tetris-gameover-score {
+	text-align: center;
+	padding: 10px 0;
+}
+
+.tetris-gameover-score-box {
+	display: inline-block;
+	margin: 0 10px;
+}
+
+.tetris-gameover-score-box .tetris-label,
+.tetris-gameover-score-box .tetris-value {
+	display: block;
+}
+
+.tetris-gameover-score-box .tetris-label {
+	font-weight: bold;
+	text-decoration: underline;
 }
 
 .tetris-title {
