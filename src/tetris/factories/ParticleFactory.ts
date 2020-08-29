@@ -10,6 +10,12 @@ interface Particle extends Vector {
 
 class ParticleFactory {
 
+	private ctx: CanvasRenderingContext2D;
+
+	constructor(ctx: CanvasRenderingContext2D) {
+		this.ctx = ctx;
+	}
+
 	public particles: Array<Particle> = [];
 
 	public createParticle(x: number, y: number, color: string, sizeIncrement: number): void {
@@ -42,12 +48,12 @@ class ParticleFactory {
 		}
 	}
 
-	public drawParticles(ctx: CanvasRenderingContext2D): void {
-		ctx.lineWidth = 2;
+	public drawParticles(): void {
+		this.ctx.lineWidth = 2;
 		for(let i = 0; i < this.particles.length; i++){
 			const particle = this.particles[i];
-			ctx.strokeStyle = particle.color;
-			ctx.strokeRect(particle.x, particle.y, particle.radius, particle.radius);
+			this.ctx.strokeStyle = particle.color;
+			this.ctx.strokeRect(particle.x, particle.y, particle.radius, particle.radius);
 		}
 	}
 

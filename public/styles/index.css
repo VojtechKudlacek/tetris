@@ -45,13 +45,19 @@ code {
 	box-sizing: content-box;
 }
 
-.tetris-overlay {
+.tetris-ui-renderer {
 	position: absolute;
-	display: table;
 	height: 100%;
 	width: 100%;
 	top: 0;
 	left: 0;
+}
+
+.tetris-overlay {
+	position: relative;
+	display: table;
+	height: 100%;
+	width: 100%;
 }
 
 .tetris-overlay.tetris-dark-overlay {

@@ -1,198 +1,67 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT, AVAILABLE_KEYS } from 'tetris/const';
 
-interface Actions {
-	onLevelSelect: (level: number) => void;
-	onRestart: VoidFunction;
-	onMenu: VoidFunction;
-}
-
 class DomManager {
 
-	//* Private readonly
+	// Private properties
 
 	private readonly LEVEL_COUNT = 18;
 
-	//* Private
-
 	private parent: HTMLElement;
+	private uiRenderer!: HTMLElement;
 
-	private scoreElement!: HTMLElement;
-	private highScoreElement!: HTMLElement;
-	private gameOverScoreElement!: HTMLElement;
-	private gameOverHighScoreElement!: HTMLElement;
-
-	private menuScreen!: HTMLElement;
-	private gameOverScreen!: HTMLElement;
-	private pauseScreen!: HTMLElement;
-	private uiScreen!: HTMLElement;
-
-	//* Public
+	// Public properties
 
 	public canvas!: HTMLCanvasElement;
 
-	//* Construct
+	// Constructor
 
 	constructor(element: HTMLElement) {
 		this.parent = element;
 	}
 
-	//* Private
+	// Private methods
 
-	private hideScreens(): void {
-		this.menuScreen.style.display = 'none';
-		this.gameOverScreen.style.display = 'none';
-		this.pauseScreen.style.display = 'none';
-		this.uiScreen.style.display = 'none';
+	private createElement<T extends keyof HTMLElementTagNameMap>(type: T, className?: string, value?: string): HTMLElementTagNameMap[T] {
+		const element = document.createElement(type);
+		if (className) { element.className = className; }
+		if (value) { element.innerText = value; }
+		return element;
 	}
 
-	private createScoreElement(): HTMLElement {
+	private overrideUiRenderer(element: HTMLElement): void {
+		this.uiRenderer.innerHTML = '';
+		this.uiRenderer.appendChild(element);
+	}
+
+	private createOverlay(child: HTMLElement, className: string = ''): HTMLDivElement {
+		let cn = 'tetris-overlay';
+		if (className) { cn += (' ' + className); }
+		const parent = this.createElement('div', cn);
+		const aligner = this.createElement('div', 'tetris-aligner');
+		aligner.appendChild(child);
+		parent.appendChild(aligner);
+		return parent;
+	}
+
+	private createScoreElement(score: string): HTMLElement {
 		const el = document.createElement('span');
 		el.className = 'tetris-value';
-		el.innerText = '0';
+		el.innerText = score;
 		return el;
 	}
 
-	private createScoreElements(): void {
-		this.scoreElement = this.createScoreElement();
-		this.highScoreElement = this.createScoreElement();
-		this.gameOverScoreElement = this.createScoreElement();
-		this.gameOverHighScoreElement = this.createScoreElement();
-	}
+	// Public methods
 
-	private createMenu(onLevelSelect: (level: number) => void): void {
-		const parent = document.createElement('div');
-		parent.className = 'tetris-overlay';
-		parent.style.display = 'none';
+	public renderGameInterface(props: { score: string, highScore: string, keys: KeysReference }): void {
+		const { score, highScore, keys } = props;
 
-		const aligner = document.createElement('div');
-		aligner.className = 'tetris-aligner';
-
-		const menuBox = document.createElement('div');
-		menuBox.className = 'tetris-menu-box';
-
-		const title = document.createElement('div');
-		title.className = 'tetris-title';
-		title.innerText = 'CHOOSE LEVEL!';
-
-		const buttons = document.createElement('div');
-		buttons.className = 'tetris-levels';
-		for (let level = 0; level < this.LEVEL_COUNT; level++) {
-			const button = document.createElement('button');
-			button.addEventListener('click', () => onLevelSelect(level + 1))
-			button.innerText = String(level + 1);
-			button.className = 'tetris-button tetris-level';
-			buttons.appendChild(button);
-		}
-
-		menuBox.appendChild(title)
-		menuBox.appendChild(buttons)
-		aligner.appendChild(menuBox);
-		parent.appendChild(aligner);
-
-		this.menuScreen = parent;
-	}
-
-	private createGameOver(onMenu: VoidFunction, onRestart: VoidFunction): void {
-		const parent = document.createElement('div');
-		parent.className = 'tetris-overlay tetris-dark-overlay';
-		parent.style.display = 'none';
-
-		const aligner = document.createElement('div');
-		aligner.className = 'tetris-aligner';
-
-		const title = document.createElement('div');
-		title.className = 'tetris-title';
-		title.innerText = 'GAME OVER!';
-
-		const score = document.createElement('div');
-		score.className = 'tetris-gameover-score';
-
-		const scoreBox = document.createElement('div');
-		scoreBox.className = 'tetris-gameover-score-box';
-
-		const highScoreBox = document.createElement('div');
-		highScoreBox.className = 'tetris-gameover-score-box';
-
-		const scoreLabel = document.createElement('span');
-		scoreLabel.className = 'tetris-label';
-		scoreLabel.innerText = 'SCORE';
-
-		const highScoreLabel = document.createElement('span');
-		highScoreLabel.className = 'tetris-label';
-		highScoreLabel.innerText = 'HIGH SCORE';
-
-		const buttons = document.createElement('div');
-		buttons.className = 'tetris-buttons';
-
-		const retryButton = document.createElement('button');
-		retryButton.className = 'tetris-button';
-		retryButton.innerText = 'Retry';
-		retryButton.addEventListener('click', () => onRestart());
-
-		const mainMenuButton = document.createElement('button');
-		mainMenuButton.className = 'tetris-button';
-		mainMenuButton.innerText = 'Main Menu';
-		mainMenuButton.addEventListener('click', () => onMenu());
-
-		buttons.appendChild(retryButton);
-		buttons.appendChild(mainMenuButton);
-		scoreBox.appendChild(scoreLabel);
-		scoreBox.appendChild(this.gameOverScoreElement)
-		highScoreBox.appendChild(highScoreLabel);
-		highScoreBox.appendChild(this.gameOverHighScoreElement);
-		score.appendChild(scoreBox);
-		score.appendChild(highScoreBox);
-		aligner.appendChild(title);
-		aligner.appendChild(score);
-		aligner.appendChild(buttons);
-		parent.appendChild(aligner);
-
-		this.gameOverScreen = parent;
-	}
-
-	private createPause(): void {
-		const parent = document.createElement('div');
-		parent.className = 'tetris-overlay tetris-black-overlay';
-		parent.style.display = 'none';
-
-		const aligner = document.createElement('div');
-		aligner.className = 'tetris-aligner';
-
-		const title = document.createElement('div');
-		title.className = 'tetris-title';
-		title.innerText = 'PAUSE';
-
-		aligner.appendChild(title);
-		parent.appendChild(aligner);
-
-		this.pauseScreen = parent;
-	}
-
-	private createUI(keys: KeysReference): void {
-		const parent = document.createElement('div');
-		parent.className = 'tetris-overlay';
-		parent.style.display = 'none';
-
-		const ui = document.createElement('div');
-		ui.className = 'tetris-ui';
-
-		const gameStats = document.createElement('div');
-		gameStats.className = 'tetris-stats';
-
-		const nextBlockLabel = document.createElement('span');
-		nextBlockLabel.className = 'tetris-label tetris-next-block';
-		nextBlockLabel.innerText = 'NEXT BLOCK';
-
-		const scoreLabel = document.createElement('span');
-		scoreLabel.className = 'tetris-label';
-		scoreLabel.innerText = 'SCORE';
-
-		const highScoreLabel = document.createElement('span');
-		highScoreLabel.className = 'tetris-label';
-		highScoreLabel.innerText = 'HIGH SCORE';
-
-		const controls = document.createElement('div');
-		controls.className = 'tetris-controls';
+		const view = this.createElement('div', 'tetris-overlay');
+		const ui = this.createElement('div', 'tetris-ui');
+		const gameStats = this.createElement('div', 'tetris-stats');
+		const nextBlockLabel = this.createElement('span', 'tetris-label tetris-next-block', 'NEXT BLOCK');
+		const scoreLabel = this.createElement('span', 'tetris-label', 'SCORE');
+		const highScoreLabel = this.createElement('span', 'tetris-label', 'HIGH SCORE');
+		const controls = this.createElement('div', 'tetris-controls');
 
 		const availableOptions = [
 			['Left', keys.holdableKeys.LEFT],
@@ -203,26 +72,82 @@ class DomManager {
 			['Pause', keys.pressableKeys.PAUSE],
 		];
 
-		availableOptions.forEach(([label, key]) => {
-			const el = document.createElement('div');
+		for (const [label, key] of availableOptions) {
+			const el = this.createElement('div');
 			el.className = 'tetris-controls-label';
 			el.innerHTML = `<span class="tetris-label">${label}</span><span class="tetris-value">${AVAILABLE_KEYS[key]}</span>`;
 			controls.appendChild(el);
-		});
+		}
 
 		gameStats.appendChild(nextBlockLabel);
 		gameStats.appendChild(scoreLabel);
-		gameStats.appendChild(this.scoreElement);
+		gameStats.appendChild(this.createScoreElement(score));
 		gameStats.appendChild(highScoreLabel);
-		gameStats.appendChild(this.highScoreElement);
+		gameStats.appendChild(this.createScoreElement(highScore));
 		ui.appendChild(gameStats);
 		ui.appendChild(controls);
-		parent.appendChild(ui);
+		view.appendChild(ui);
 
-		this.uiScreen = parent;
+		this.overrideUiRenderer(view);
 	}
 
-	//* Public
+	public renderMenu(props: { onLevelSelect: (level: number) => void }): void {
+		const { onLevelSelect } = props;
+
+		const menuBox = this.createElement('div', 'tetris-menu-box');
+		const title = this.createElement('div', 'tetris-title', 'CHOOSE LEVEL!');
+		const buttons = this.createElement('div', 'tetris-levels');
+
+		for (let level = 0; level < this.LEVEL_COUNT; level++) {
+			const button = this.createElement('button', 'tetris-button tetris-level', String(level + 1));
+			button.addEventListener('click', () => onLevelSelect(level + 1))
+			buttons.appendChild(button);
+		}
+
+		menuBox.appendChild(title)
+		menuBox.appendChild(buttons)
+
+		const view = this.createOverlay(menuBox);
+		this.overrideUiRenderer(view);
+	}
+
+	public renderPause(): void {
+		const title = this.createElement('div', 'tetris-title', 'PAUSE');
+		const view = this.createOverlay(title, 'tetris-black-overlay');
+		this.overrideUiRenderer(view);
+	}
+
+	public renderGameOver(props: { onMenu: VoidFunction, onRestart: VoidFunction, score: string, highScore: string }): void {
+		const { onMenu, onRestart } = props;
+
+		const gameOver = this.createElement('div', 'tetris-gameover');
+		const title = this.createElement('div', 'tetris-title', 'GAME OVER!');
+		const score = this.createElement('div', 'tetris-gameover-score');
+		const scoreBox = this.createElement('div', 'tetris-gameover-score-box');
+		const highScoreBox = this.createElement('div', 'tetris-gameover-score-box');
+		const scoreLabel = this.createElement('span', 'tetris-label', 'SCORE');
+		const highScoreLabel = this.createElement('span', 'tetris-label', 'HIGH SCORE');
+		const buttons = this.createElement('div', 'tetris-buttons');
+		const retryButton = this.createElement('button', 'tetris-button', 'Retry');
+		retryButton.addEventListener('click', onRestart);
+		const mainMenuButton = this.createElement('button', 'tetris-button', 'Main Menu');
+		mainMenuButton.addEventListener('click', onMenu);
+
+		buttons.appendChild(retryButton);
+		buttons.appendChild(mainMenuButton);
+		scoreBox.appendChild(scoreLabel);
+		scoreBox.appendChild(this.createScoreElement(props.score))
+		highScoreBox.appendChild(highScoreLabel);
+		highScoreBox.appendChild(this.createScoreElement(props.highScore));
+		score.appendChild(scoreBox);
+		score.appendChild(highScoreBox);
+		gameOver.appendChild(title);
+		gameOver.appendChild(score);
+		gameOver.appendChild(buttons);
+
+		const view = this.createOverlay(gameOver, 'tetris-dark-overlay');
+		this.overrideUiRenderer(view);
+	}
 
 	public createCanvas(): void {
 		const canvas = document.createElement('canvas');
@@ -232,54 +157,17 @@ class DomManager {
 		this.canvas = canvas;
 	}
 
-	public init(actions: Actions, keys: KeysReference): void {
+	public init(): void {
 		// Update given element
 		this.parent.className = 'tetris';
 		this.parent.style.width = `${CANVAS_WIDTH}px`;
 		this.parent.style.height = `${CANVAS_HEIGHT}px`;
 		// Create screens
-		this.createScoreElements();
-		this.createUI(keys);
-		this.createMenu(actions.onLevelSelect);
-		this.createGameOver(actions.onMenu, actions.onRestart);
-		this.createPause();
+		this.uiRenderer = this.createElement('div', 'tetris-ui-renderer');
 		// Add screens to the DOM
 		this.parent.innerHTML = '';
 		this.parent.appendChild(this.canvas);
-		this.parent.appendChild(this.uiScreen);
-		this.parent.appendChild(this.menuScreen);
-		this.parent.appendChild(this.gameOverScreen);
-		this.parent.appendChild(this.pauseScreen);
-	}
-
-	public showScreen(screen: 'ui' | 'menu' | 'gameOver' | 'pause'): void {
-		this.hideScreens();
-		switch (screen) {
-			case 'gameOver':
-				this.gameOverScreen.style.display = '';
-				this.uiScreen.style.display = '';
-				break;
-			case 'menu':
-				this.menuScreen.style.display = '';
-				break;
-			case 'pause':
-				this.pauseScreen.style.display = '';
-				break;
-			case 'ui':
-				this.uiScreen.style.display = '';
-			default:
-				break;
-		}
-	}
-
-	public setScore(score: number): void {
-		if (this.scoreElement) { this.scoreElement.innerText = String(score); }
-		if (this.gameOverScoreElement) { this.gameOverScoreElement.innerText = String(score); }
-	}
-
-	public setHighScore(score: number): void {
-		if (this.highScoreElement) { this.highScoreElement.innerText = String(score); }
-		if (this.gameOverHighScoreElement) { this.gameOverHighScoreElement.innerText = String(score); }
+		this.parent.appendChild(this.uiRenderer);
 	}
 
 }

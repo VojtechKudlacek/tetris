@@ -10,41 +10,41 @@ import * as CONST from 'tetris/const';
 import * as utils from 'tetris/utils';
 
 class Tetris {
-	// DOM
-	private ctx: CanvasRenderingContext2D;
+	// Managers
 	private domManager: DomManager;
-	private audioManager: AudioManager = new AudioManager();
-	private controlManager: ControlManager = new ControlManager();
+	private audioManager: AudioManager;
+	private controlManager: ControlManager;
 	private renderingTools: RenderingTools;
-	// Render
+	private scoreManager: ScoreManager;
+	private fieldManager: FieldManager;
+	// Factories
+	private blockFactory: BlockFactory;
+	private particleFactory: ParticleFactory;
+	// Game
 	private animating: boolean = false;
 	private inGame: boolean = false;
-	// Score
-	private scoreManager: ScoreManager = new ScoreManager();
-	// Game
-	private fieldManager: FieldManager = new FieldManager();
-	// Level
 	private level: number = 0;
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
 	private originalInterval: number = 200;
-	// Block
-	private blockFactory: BlockFactory = new BlockFactory();
-	// Particles
-	private particleFactory: ParticleFactory = new ParticleFactory();
 
 	constructor(parent: HTMLElement) {
+		this.audioManager = new AudioManager();
+		this.controlManager = new ControlManager();
+		this.scoreManager = new ScoreManager();
+		this.fieldManager = new FieldManager();
 		this.domManager = new DomManager(parent);
 		this.domManager.createCanvas();
-		this.ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-		this.renderingTools = new RenderingTools(this.ctx);
+		const ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+		this.renderingTools = new RenderingTools(ctx);
+		this.particleFactory = new ParticleFactory(ctx);
+		this.blockFactory = new BlockFactory();
 	}
 
-	private loose(): void {
+	private gameOver(): void {
 		this.scoreManager.updateHighScore();
-		this.domManager.setHighScore(this.scoreManager.highScore);
 		this.animating = false;
-		this.domManager.showScreen('gameOver');
+		this.renderGameOver();
 	}
 
 	// Game processing
@@ -74,12 +74,12 @@ class Tetris {
 			});
 
 			if (this.fieldManager.isBlockInFirstRow) {
-				this.loose();
+				this.gameOver();
 			} else {
 				this.blockFactory.useNextBlock();
-				this.domManager.setScore(this.scoreManager.score);
 				this.renderingTools.preDrawGame(this.fieldManager);
 				this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
+				this.renderGameInterface();
 			}
 		}
 	}
@@ -95,12 +95,12 @@ class Tetris {
 			// Draw next block
 			this.renderingTools.drawNextBlock();
 			// Draw particles
-			this.particleFactory.drawParticles(this.ctx);
+			this.particleFactory.drawParticles();
 			// Draw current block
 			this.renderingTools.drawCurrentBlock(this.blockFactory.currentBlock);
 		} else {
 			// Draw particles
-			this.particleFactory.drawParticles(this.ctx);
+			this.particleFactory.drawParticles();
 		}
 	}
 
@@ -114,10 +114,10 @@ class Tetris {
 		if (keyPressed.PAUSE) {
 			if (this.animating) {
 				this.animating = false;
-				this.domManager.showScreen('pause');
+				this.renderPause();
 			} else {
 				this.animating = true;
-				this.domManager.showScreen('ui');
+				this.renderGameInterface();
 			}
 			this.controlManager.clearKey('PAUSE');
 		}
@@ -217,7 +217,6 @@ class Tetris {
 		this.audioManager.init();
 		this.scoreManager.init();
 		this.controlManager.init();
-		this.domManager.setScore(this.scoreManager.score);
 		this.renderingTools.preDrawGame(this.fieldManager);
 		this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 	}
@@ -232,8 +231,8 @@ class Tetris {
 	private startGame(): void {
 		this.animating = true;
 		this.inGame = true;
-		this.domManager.showScreen('ui');
 		this.gameSetup();
+		this.renderGameInterface();
 	}
 
 	private endGame(): void {
@@ -248,21 +247,43 @@ class Tetris {
 
 	private onMenu(): void {
 		this.endGame();
-		this.domManager.showScreen('menu');
+		this.renderMenu();
 	}
 
-	// EXPOSED
+	// Render
+
+	private renderGameInterface(): void {
+		this.domManager.renderGameInterface({
+			score: String(this.scoreManager.score),
+			highScore: String(this.scoreManager.highScore),
+			keys: this.controlManager.options,
+		});
+	}
+
+	private renderMenu(): void {
+		this.domManager.renderMenu({ onLevelSelect: this.onLevelSelect.bind(this) });
+	}
+
+	private renderPause(): void {
+		this.domManager.renderPause();
+	}
+
+	private renderGameOver(): void {
+		this.domManager.renderGameOver({
+			score: String(this.scoreManager.score),
+			highScore: String(this.scoreManager.highScore),
+			onMenu: this.onMenu.bind(this),
+			onRestart: this.startGame.bind(this),
+		});
+	}
+
+	// Exposed
 
 	public init(): void {
 		this.animating = true;
 		this.gameSetup();
-		this.domManager.init({
-			onLevelSelect: this.onLevelSelect.bind(this),
-			onRestart: this.startGame.bind(this),
-			onMenu: this.onMenu.bind(this),
-		}, this.controlManager.options);
-		this.domManager.setHighScore(this.scoreManager.highScore);
-		this.domManager.showScreen('menu');
+		this.domManager.init();
+		this.renderMenu();
 		requestAnimationFrame(this.loop);
 	}
 
