@@ -8,18 +8,21 @@ import ParticleFactory from 'tetris/factories/ParticleFactory';
 import BlockFactory from 'tetris/factories/BlockFactory';
 import * as CONST from 'tetris/const';
 import * as utils from 'tetris/utils';
+// Components
+import * as components from 'tetris/domComponents';
 
 class Tetris {
 	// Managers
 	private domManager: DomManager;
 	private audioManager: AudioManager;
 	private controlManager: ControlManager;
-	private renderingTools: RenderingTools;
 	private scoreManager: ScoreManager;
 	private fieldManager: FieldManager;
 	// Factories
 	private blockFactory: BlockFactory;
 	private particleFactory: ParticleFactory;
+	// Rendering
+	private renderingTools: RenderingTools;
 	// Game
 	private animating: boolean = false;
 	private inGame: boolean = false;
@@ -52,7 +55,7 @@ class Tetris {
 	private processMove(): void {
 		const currentBlock = this.blockFactory.currentBlock;
 		if (!this.fieldManager.isColiding(currentBlock, currentBlock.x, currentBlock.y + 1)) {
-			currentBlock.setY(currentBlock.y + 1);
+			currentBlock.y++;
 		} else {
 			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
 			if (this.interval <= CONST.SLAM_INTERVAL) {
@@ -64,7 +67,7 @@ class Tetris {
 					}
 				})
 			}
-			this.fieldManager.checkAndClearFilledRows((row, cleared) => {
+			this.fieldManager.clearFilledRows((row, cleared) => {
 				this.fieldManager.iterateCols(row, (col, _, color) => {
 					const x = (col * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
 					const y = (row * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
@@ -138,14 +141,14 @@ class Tetris {
 		// Move the block left
 		if (keyPressed.LEFT) {
 			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
-				currentBlock.setX(currentBlock.x - 1);
+				currentBlock.x--;
 			}
 			this.controlManager.clearKey('LEFT');
 		}
 		// Move the block right
 		if (keyPressed.RIGHT) {
 			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
-				currentBlock.setX(currentBlock.x + 1);
+				currentBlock.x++;
 			}
 			this.controlManager.clearKey('RIGHT');
 		}
@@ -253,7 +256,7 @@ class Tetris {
 	// Render
 
 	private renderGameInterface(): void {
-		this.domManager.renderGameInterface({
+		this.domManager.renderComponent(components.GameInterface, {
 			score: String(this.scoreManager.score),
 			highScore: String(this.scoreManager.highScore),
 			keys: this.controlManager.options,
@@ -261,15 +264,15 @@ class Tetris {
 	}
 
 	private renderMenu(): void {
-		this.domManager.renderMenu({ onLevelSelect: this.onLevelSelect.bind(this) });
+		this.domManager.renderComponent(components.Menu, { onLevelSelect: this.onLevelSelect.bind(this) })
 	}
 
 	private renderPause(): void {
-		this.domManager.renderPause();
+		this.domManager.renderComponent(components.Pause, null);
 	}
 
 	private renderGameOver(): void {
-		this.domManager.renderGameOver({
+		this.domManager.renderComponent(components.GameOver, {
 			score: String(this.scoreManager.score),
 			highScore: String(this.scoreManager.highScore),
 			onMenu: this.onMenu.bind(this),

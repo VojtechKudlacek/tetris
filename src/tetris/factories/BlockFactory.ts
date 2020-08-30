@@ -1,6 +1,6 @@
 import Block from 'tetris/classes/Block';
 import * as utils from 'tetris/utils';
-import { COLORS, COL_COUNT } from 'tetris/const';
+import { COLORS } from 'tetris/const';
 
 class BlockFactory {
 
@@ -9,8 +9,6 @@ class BlockFactory {
 			minSize: 1,
 			maxSize: 4,
 			tiles: 4,
-			defaultX: (COL_COUNT / 2) - 2,
-			defaultY: -2,
 			value: [
 				[0, 0, 0, 0],
 				[1, 1, 1, 1],
@@ -23,8 +21,6 @@ class BlockFactory {
 			minSize: 2,
 			maxSize: 3,
 			tiles: 3,
-			defaultX: (COL_COUNT / 2) - 1,
-			defaultY: -2,
 			value: [
 				[0, 0, 0],
 				[1, 1, 1],
@@ -36,8 +32,6 @@ class BlockFactory {
 			minSize: 2,
 			maxSize: 3,
 			tiles: 3,
-			defaultX: (COL_COUNT / 2) - 1,
-			defaultY: -2,
 			value: [
 				[0, 0, 0],
 				[1, 1, 1],
@@ -49,8 +43,6 @@ class BlockFactory {
 			minSize: 2,
 			maxSize: 2,
 			tiles: 2,
-			defaultX: (COL_COUNT / 2) - 1,
-			defaultY: -2,
 			value: [
 				[1, 1],
 				[1, 1]
@@ -61,8 +53,6 @@ class BlockFactory {
 			minSize: 2,
 			maxSize: 3,
 			tiles: 3,
-			defaultX: (COL_COUNT / 2) - 1,
-			defaultY: -2,
 			value: [
 				[0, 1, 1],
 				[1, 1, 0],
@@ -74,8 +64,6 @@ class BlockFactory {
 			minSize: 2,
 			maxSize: 3,
 			tiles: 3,
-			defaultX: (COL_COUNT / 2) - 1,
-			defaultY: -2,
 			value: [
 				[0, 0, 0],
 				[1, 1, 1],
@@ -87,8 +75,6 @@ class BlockFactory {
 			minSize: 2,
 			maxSize: 3,
 			tiles: 3,
-			defaultX: (COL_COUNT / 2) - 1,
-			defaultY: -2,
 			value: [
 				[1, 1, 0],
 				[0, 1, 1],

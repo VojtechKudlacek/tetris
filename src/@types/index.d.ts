@@ -17,3 +17,5 @@ interface Size {
 }
 
 type KeyboardListener = (e: KeyboardEvent) => void;
+
+type Component<P = null> = (props: P) => HTMLElement;

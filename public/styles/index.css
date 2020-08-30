@@ -138,22 +138,22 @@ code {
 	display: block;
 }
 
-.tetris-gameover-score {
+.tetris-game-over-score {
 	text-align: center;
 	padding: 10px 0;
 }
 
-.tetris-gameover-score-box {
+.tetris-game-over-score-box {
 	display: inline-block;
 	margin: 0 10px;
 }
 
-.tetris-gameover-score-box .tetris-label,
-.tetris-gameover-score-box .tetris-value {
+.tetris-game-over-score-box .tetris-label,
+.tetris-game-over-score-box .tetris-value {
 	display: block;
 }
 
-.tetris-gameover-score-box .tetris-label {
+.tetris-game-over-score-box .tetris-label {
 	font-weight: bold;
 	text-decoration: underline;
 }

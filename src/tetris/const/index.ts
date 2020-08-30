@@ -22,3 +22,5 @@ export const CANVAS_HEIGHT = TILE_SIZE * ROW_COUNT;
 export const MENU_PARTICLE_COUNT = 100;
 // Speed
 export const SLAM_INTERVAL = 25;
+// Levels
+export const LEVEL_COUNT = 18;
