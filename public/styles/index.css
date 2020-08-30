@@ -45,13 +45,19 @@ code {
 	box-sizing: content-box;
 }
 
-.tetris-overlay {
+.tetris-ui-renderer {
 	position: absolute;
-	display: table;
 	height: 100%;
 	width: 100%;
 	top: 0;
 	left: 0;
+}
+
+.tetris-overlay {
+	position: relative;
+	display: table;
+	height: 100%;
+	width: 100%;
 }
 
 .tetris-overlay.tetris-dark-overlay {
@@ -132,22 +138,22 @@ code {
 	display: block;
 }
 
-.tetris-gameover-score {
+.tetris-game-over-score {
 	text-align: center;
 	padding: 10px 0;
 }
 
-.tetris-gameover-score-box {
+.tetris-game-over-score-box {
 	display: inline-block;
 	margin: 0 10px;
 }
 
-.tetris-gameover-score-box .tetris-label,
-.tetris-gameover-score-box .tetris-value {
+.tetris-game-over-score-box .tetris-label,
+.tetris-game-over-score-box .tetris-value {
 	display: block;
 }
 
-.tetris-gameover-score-box .tetris-label {
+.tetris-game-over-score-box .tetris-label {
 	font-weight: bold;
 	text-decoration: underline;
 }
