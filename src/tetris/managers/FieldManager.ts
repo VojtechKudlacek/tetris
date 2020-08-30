@@ -16,7 +16,7 @@ class FieldManager {
 	/** Create field with predefined sizes based on constants */
 	public init(): void {
 		this.field = utils.create2DArray(ROW_COUNT, COL_COUNT, 0);
-		// For typescript reasons it is easier to place here empty string than `null` :MEH:
+		// For typescript reasons it is easier to place here empty string than `null` ¯\_(ツ)_/¯
 		this.colors = utils.create2DArray(ROW_COUNT, COL_COUNT, '');
 	}
 
@@ -137,7 +137,7 @@ class FieldManager {
 
 	/**
 	 * Check if there is a block in the first row
-	 * Probably not to best way to check game over :MEH:
+	 * Probably not to best way to check game over ¯\_(ツ)_/¯
 	 */
 	public get isBlockInFirstRow(): boolean {
 		const firstRow = this.field[0];

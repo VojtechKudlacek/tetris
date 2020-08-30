@@ -1,3 +1,4 @@
+// ¯\_(ツ)_/¯
 import RenderingTools from 'tetris/classes/RenderingTools';
 import DomManager from 'tetris/managers/DomManager';
 import ScoreManager from 'tetris/managers/ScoreManager';
@@ -25,6 +26,7 @@ class Tetris {
 	// Controls
 	private pressedLeft: boolean = false;
 	private pressedRight: boolean = false;
+	private movementDelay: number = 0;
 	// Game
 	private animating: boolean = false;
 	private inGame: boolean = false;
@@ -123,22 +125,32 @@ class Tetris {
 		}
 	}
 
-	/**
-	 * Game processing
-	 */
-	private processControls(): void {
+	private moveBlockLeft(): void {
 		const currentBlock = this.blockFactory.currentBlock;
-
-		if (this.pressedLeft) {
-			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
-				currentBlock.x--;
-			}
+		if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
+			currentBlock.x--;
 		}
+	}
 
-		if (this.pressedRight) {
-			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
-				currentBlock.x++;
+	private moveBlockRight(): void {
+		const currentBlock = this.blockFactory.currentBlock;
+		if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
+			currentBlock.x++;
+		}
+	}
+
+	private processControls(): void {
+		if (this.movementDelay === 0) {
+			if (this.pressedLeft) {
+				this.moveBlockLeft();
+				this.movementDelay++;
 			}
+			if (this.pressedRight) {
+				this.moveBlockRight();
+				this.movementDelay++;
+			}
+		} else if (this.movementDelay > 0) {
+			this.movementDelay--;
 		}
 	}
 
@@ -201,10 +213,18 @@ class Tetris {
 					this.interval = Infinity; // TODO: Remove this
 					break;
 				case controls.LEFT:
-					this.pressedLeft = true;
+					if (!this.pressedLeft) {
+						this.pressedLeft = true;
+						this.movementDelay = constants.MOVEMENT_DELAY;
+						this.moveBlockLeft();
+					}
 					break;
 				case controls.RIGHT:
-					this.pressedRight = true;
+					if (!this.pressedRight) {
+						this.pressedRight = true;
+						this.movementDelay = constants.MOVEMENT_DELAY;
+						this.moveBlockRight();
+					}
 					break;
 				case controls.ROTATE_LEFT: {
 					const newBlock = currentBlock.duplicate();

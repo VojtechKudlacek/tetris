@@ -1,3 +1,4 @@
+/** List of supported keys with its renderable name */
 export const AVAILABLE_KEYS: NumDictionary<string> = {
 	9: 'Tab',
 	13: 'enter',

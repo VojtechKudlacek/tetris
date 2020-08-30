@@ -1,1 +1,1 @@
-export { default } from 'tetris/Tetris';
+export { default } from 'tetris/classes/Tetris';
