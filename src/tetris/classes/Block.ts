@@ -5,11 +5,11 @@ type BlockValue = Array<Array<number>>;
 
 /** Default block settings */
 interface Properties {
-	minSize: number;
-	maxSize: number;
-	tiles: number;
 	value: BlockValue;
 	color: string;
+	tiles?: number;
+	minSize?: number;
+	maxSize?: number;
 	preview?: BlockValue;
 	x?: number;
 	y?: number;
@@ -36,13 +36,13 @@ class Block implements Vector {
 	public y: number;
 
 	constructor(props: Properties) {
-		this.tiles = props.tiles;
 		this.color = props.color;
-		this.minSize = props.minSize;
-		this.maxSize = props.maxSize;
 		this.value = props.value;
 		// Preview can be passed in to reduce calculations
 		this.preview = props.preview || this.value.filter((row) => row.includes(1));
+		this.minSize = props.minSize ?? this.preview.length;
+		this.maxSize = props.maxSize ?? this.value.length;
+		this.tiles = props.tiles ?? this.maxSize;
 		// Use given X and Y position or calculate default one
 		this.x = props.x ?? (COL_COUNT / 2) - Math.floor(this.tiles / 2);
 		this.y = props.y ?? Math.ceil(this.tiles / 2) * (-1);
