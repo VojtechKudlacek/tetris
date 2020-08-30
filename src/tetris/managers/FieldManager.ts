@@ -124,7 +124,7 @@ class FieldManager {
 	 * Iterate through the field and clear filled rows
 	 * @param fn Function called for every cleared row
 	 */
-	public clearFilledRows(fn: (row: number, cleared: number) => void): void {
+	public clearFilledRows(fn: (row: number, cleared: number) => void): number {
 		let cleared = 0;
 		this.iterateRows((row) => {
 			if (this.isRowFilled(row)) {
@@ -133,6 +133,7 @@ class FieldManager {
 				fn(row, ++cleared);
 			}
 		});
+		return cleared;
 	}
 
 	/**

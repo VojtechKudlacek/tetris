@@ -52,7 +52,7 @@ class Block implements Vector {
 	public rotateLeft(): void {
 		const newValue = [];
 		for (let col = 0; col < this.value[0].length; col++) {
-			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
+			const newRow = this.value.map((row) => row[col]).reverse();
 			newValue.push(newRow);
 		}
 		this.value = newValue;
@@ -62,7 +62,7 @@ class Block implements Vector {
 	public rotateRight(): void {
 		const newValue = [];
 		for (let col = 0; col < this.value[0].length; col++) {
-			const newRow = this.value.map((row) => row[col]).reverse();
+			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
 			newValue.push(newRow);
 		}
 		this.value = newValue;

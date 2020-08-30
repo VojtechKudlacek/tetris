@@ -3,6 +3,6 @@
 ## To Do
 
 - Add delay after clearing a row
-- Finish rendering tools
+- Add sounds
 - Finish comments
 - Finish README

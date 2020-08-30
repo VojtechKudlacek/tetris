@@ -12,6 +12,8 @@ import * as utils from 'tetris/utils';
 import * as components from 'tetris/domComponents';
 
 class Tetris {
+
+	private ctx: CanvasRenderingContext2D;
 	// Managers
 	private domManager: DomManager;
 	private audioManager: AudioManager;
@@ -28,9 +30,10 @@ class Tetris {
 	private pressedRight: boolean = false;
 	private movementDelay: number = 0;
 	// Game
-	private animating: boolean = false;
-	private inGame: boolean = false;
-	private paused: boolean = false;
+	private isInGame: boolean = false;
+	private isGameOver: boolean = false;
+	private isPaused: boolean = false;
+
 	private initialLevel: number = 0;
 	private level: number = 0;
 	private lastUpdateTime: number = 0;
@@ -38,22 +41,23 @@ class Tetris {
 	private originalInterval: number = 200;
 
 	constructor(parent: HTMLElement) {
+		this.domManager = new DomManager(parent);
+		this.domManager.createCanvas();
+		// Since when does `.getContext('2d')` can return undefined?
+		this.ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
 		this.audioManager = new AudioManager();
 		this.controlManager = new ControlManager();
 		this.scoreManager = new ScoreManager();
 		this.fieldManager = new FieldManager();
-		this.domManager = new DomManager(parent);
-		this.domManager.createCanvas();
-		const ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
-		this.renderingTools = new RenderingTools(ctx);
-		this.particleFactory = new ParticleFactory(ctx);
+		this.renderingTools = new RenderingTools(this.ctx);
+		this.particleFactory = new ParticleFactory();
 		this.blockFactory = new BlockFactory();
 	}
 
 	private gameOver(): void {
 		this.scoreManager.updateHighScore();
-		this.animating = false;
 		this.renderGameOver();
+		this.isGameOver = true;
 	}
 
 	// Game processing
@@ -75,7 +79,7 @@ class Tetris {
 					}
 				})
 			}
-			this.fieldManager.clearFilledRows((row, cleared) => {
+			const clearedRows = this.fieldManager.clearFilledRows((row, cleared) => {
 				this.fieldManager.iterateCols(row, (col, _, color) => {
 					this.particleFactory.createParticles(
 						(col * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
@@ -95,7 +99,9 @@ class Tetris {
 				this.blockFactory.useNextBlock();
 				this.renderingTools.preDrawGame(this.fieldManager);
 				this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
-				this.renderGameInterface();
+				if (clearedRows) {
+					this.renderGameInterface();
+				}
 			}
 		}
 	}
@@ -110,19 +116,18 @@ class Tetris {
 	 */
 	private render(): void {
 		this.renderingTools.clear();
-		if (this.inGame) {
-			// Draw game
+		if (this.isInGame) {
+			//* Draw game
 			this.renderingTools.drawGame();
-			// Draw next block
-			this.renderingTools.drawNextBlock();
-			// Draw particles
-			this.particleFactory.drawParticles();
-			// Draw current block
+			//* Draw next block
+			if (!this.isGameOver) {
+				this.renderingTools.drawNextBlock();
+			}
+			//* Draw current block
 			this.renderingTools.drawCurrentBlock(this.blockFactory.currentBlock);
-		} else {
-			// Draw particles
-			this.particleFactory.drawParticles();
 		}
+		//* Draw particles
+		this.particleFactory.drawParticles(this.ctx);
 	}
 
 	private moveBlockLeft(): void {
@@ -155,7 +160,6 @@ class Tetris {
 	}
 
 	private processGame(delta: number): void {
-		this.particleFactory.processParticles();
 		if (delta - this.lastUpdateTime > this.interval) {
 			this.processMove();
 			this.lastUpdateTime = delta;
@@ -163,7 +167,6 @@ class Tetris {
 	}
 
 	private processMenu(): void {
-		this.particleFactory.processParticles();
 		if (this.particleFactory.particles.length < constants.MENU_PARTICLE_COUNT) {
 			const colors = Object.values(constants.COLORS);
 			for (let i = this.particleFactory.particles.length; i < constants.MENU_PARTICLE_COUNT; i++) {
@@ -182,16 +185,15 @@ class Tetris {
 	 * @param delta Time spent in game
 	 */
 	private loop = (delta: number): void => {
-		if (this.inGame) {
+		if (!this.isPaused) {
 			this.processControls();
-		}
-		if (this.animating) {
-			this.render();
-			if (this.inGame) {
+			this.particleFactory.processParticles();
+			if (this.isInGame && !this.isGameOver) {
 				this.processGame(delta);
-			} else {
+			} else if (!this.isInGame) {
 				this.processMenu();
 			}
+			this.render();
 		}
 		requestAnimationFrame(this.loop)
 	}
@@ -201,10 +203,10 @@ class Tetris {
 		this.controlManager.setListener('keydown', (keyCode, controls) => {
 			const currentBlock = this.blockFactory.currentBlock;
 
-			switch(keyCode) {
+			switch (keyCode) {
 				case controls.PAUSE:
-					this.paused = !this.paused;
-					this.paused ? this.renderPause() : this.renderGameInterface();
+					this.isPaused = !this.isPaused;
+					this.isPaused ? this.renderPause() : this.renderGameInterface();
 					break;
 				case controls.DOWN:
 					this.interval = constants.SLAM_INTERVAL;
@@ -244,8 +246,9 @@ class Tetris {
 				}
 			}
 		});
+
 		this.controlManager.setListener('keyup', (keyCode, controls) => {
-			switch(keyCode) {
+			switch (keyCode) {
 				case controls.DOWN:
 				case controls.UP:
 					this.interval = this.originalInterval;
@@ -266,6 +269,7 @@ class Tetris {
 	}
 
 	private gameSetup(): void {
+		this.isGameOver = false;
 		this.level = this.initialLevel;
 		this.recalculateInterval();
 		this.fieldManager.init();
@@ -288,15 +292,13 @@ class Tetris {
 	}
 
 	private startGame(): void {
-		this.animating = true;
-		this.inGame = true;
+		this.isInGame = true;
 		this.gameSetup();
 		this.renderGameInterface();
 	}
 
 	private endGame(): void {
-		this.animating = true;
-		this.inGame = false;
+		this.isInGame = false;
 	}
 
 	private onLevelSelect(level: number): void {
@@ -341,7 +343,6 @@ class Tetris {
 	// Exposed
 
 	public init(): void {
-		this.animating = true;
 		this.initControls();
 		this.gameSetup();
 		this.domManager.init();
