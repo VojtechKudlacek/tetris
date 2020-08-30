@@ -44,8 +44,8 @@ class Block implements Vector {
 		// Preview can be passed in to reduce calculations
 		this.preview = props.preview || this.value.filter((row) => row.includes(1));
 		// Use given X and Y position or calculate default one
-		this.x = props.x || (COL_COUNT / 2) - Math.floor(this.tiles / 2);
-		this.y = props.y || Math.ceil(this.tiles / 2) * (-1);
+		this.x = props.x ?? (COL_COUNT / 2) - Math.floor(this.tiles / 2);
+		this.y = props.y ?? Math.ceil(this.tiles / 2) * (-1);
 	}
 
 	/** Rotate block value anti-clockwise */

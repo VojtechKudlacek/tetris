@@ -24,3 +24,4 @@ export const MENU_PARTICLE_COUNT = 100;
 export const SLAM_INTERVAL = 25;
 // Levels
 export const LEVEL_COUNT = 18;
+export const ROWS_TO_INCREASE_LEVEL = 30;

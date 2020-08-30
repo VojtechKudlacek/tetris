@@ -5,17 +5,19 @@ import Score from './Score';
 interface Properties {
 	score: string;
 	highScore: string;
-	keys: KeysReference;
+	keys: Controls;
+	level: string;
+	clearedRows: string;
 }
 
-const GameOver: Component<Properties> = ({ score, highScore, keys }) => {
+const GameOver: Component<Properties> = ({ score, highScore, keys, level, clearedRows }) => {
 	const availableOptions = [
-		['Left', keys.holdableKeys.LEFT],
-		['Right', keys.holdableKeys.RIGHT],
-		['Rotate Left', keys.pressableKeys.ROTATE_LEFT],
-		['Rotate Right', keys.pressableKeys.ROTATE_RIGHT],
-		['Speed Up', keys.holdableKeys.DOWN],
-		['Pause', keys.pressableKeys.PAUSE],
+		['Left', keys.LEFT],
+		['Right', keys.RIGHT],
+		['Rotate Left', keys.ROTATE_LEFT],
+		['Rotate Right', keys.ROTATE_RIGHT],
+		['Speed Up', keys.DOWN],
+		['Pause', keys.PAUSE],
 	];
 
 	return createStructuredDom({
@@ -31,7 +33,11 @@ const GameOver: Component<Properties> = ({ score, highScore, keys }) => {
 							createDomElement('span', 'tetris-label', 'SCORE'),
 							Score(score),
 							createDomElement('span', 'tetris-label', 'HIGH SCORE'),
-							Score(highScore)
+							Score(highScore),
+							createDomElement('span', 'tetris-label', 'LEVEL'),
+							createDomElement('span', 'tetris-value', level),
+							createDomElement('span', 'tetris-label', 'ROWS'),
+							createDomElement('span', 'tetris-value', clearedRows),
 						]
 					}, {
 						parent: createDomElement('div', 'tetris-controls'),

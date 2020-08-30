@@ -6,6 +6,8 @@ class ScoreManager {
 
 	/** Current score */
 	public score: number = 0;
+	/** Number of cleared rows */
+	public clearedRows: number = 0;
 	/** Local high score */
 	public highScore: number = Number(localStorage.getItem('highScore') || 0);
 
@@ -31,11 +33,13 @@ class ScoreManager {
 	 * @param combo Combo for breaking multiple lines at once
 	 */
 	public add(level: number, combo: number): void {
+		this.clearedRows++;
 		this.score += this.SCORE_BASE * this.getMultiplier(combo) * level;
 	}
 
 	/** Set score to 0 */
 	public init(): void {
+		this.clearedRows = 0;
 		this.score = 0;
 	}
 

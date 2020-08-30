@@ -6,9 +6,8 @@ import FieldManager from 'tetris/managers/FieldManager';
 import AudioManager from 'tetris/managers/AudioManager';
 import ParticleFactory from 'tetris/factories/ParticleFactory';
 import BlockFactory from 'tetris/factories/BlockFactory';
-import * as CONST from 'tetris/const';
+import * as constants from 'tetris/const';
 import * as utils from 'tetris/utils';
-// Components
 import * as components from 'tetris/domComponents';
 
 class Tetris {
@@ -23,9 +22,14 @@ class Tetris {
 	private particleFactory: ParticleFactory;
 	// Rendering
 	private renderingTools: RenderingTools;
+	// Controls
+	private pressedLeft: boolean = false;
+	private pressedRight: boolean = false;
 	// Game
 	private animating: boolean = false;
 	private inGame: boolean = false;
+	private paused: boolean = false;
+	private initialLevel: number = 0;
 	private level: number = 0;
 	private lastUpdateTime: number = 0;
 	private interval: number = 200;
@@ -58,20 +62,24 @@ class Tetris {
 			currentBlock.y++;
 		} else {
 			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
-			if (this.interval <= CONST.SLAM_INTERVAL) {
+			if (this.interval <= constants.SLAM_INTERVAL) {
 				this.blockFactory.currentBlock.iterate((row, col, value, block) => {
 					if (value) {
-						const x = ((col + block.x) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
-						const y = ((row + block.y) * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
-						this.particleFactory.createParticles(x, y, block.color, 3, -1);
+						this.particleFactory.createParticles(
+							((col + block.x) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+							((row + block.y) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+							block.color, 3, -1
+						);
 					}
 				})
 			}
 			this.fieldManager.clearFilledRows((row, cleared) => {
 				this.fieldManager.iterateCols(row, (col, _, color) => {
-					const x = (col * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
-					const y = (row * CONST.TILE_SIZE) + CONST.HALF_TILE_SIZE;
-					this.particleFactory.createParticles(x, y, color, 5, (cleared * 3));
+					this.particleFactory.createParticles(
+						(col * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+						(row * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+						color, 5, (cleared * 3)
+					);
 				});
 				this.scoreManager.add(this.level, cleared - 1);
 			});
@@ -79,12 +87,20 @@ class Tetris {
 			if (this.fieldManager.isBlockInFirstRow) {
 				this.gameOver();
 			} else {
+				if (this.shouldIncreaseLevel) {
+					this.increaseLevel();
+				}
 				this.blockFactory.useNextBlock();
 				this.renderingTools.preDrawGame(this.fieldManager);
 				this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 				this.renderGameInterface();
 			}
 		}
+	}
+
+	private get shouldIncreaseLevel(): boolean {
+		return (this.level < constants.LEVEL_COUNT) &&
+			(Math.floor(this.scoreManager.clearedRows / constants.ROWS_TO_INCREASE_LEVEL) > (this.level - this.initialLevel));
 	}
 
 	/**
@@ -111,64 +127,18 @@ class Tetris {
 	 * Game processing
 	 */
 	private processControls(): void {
-		const keyPressed = this.controlManager.keyPressed;
 		const currentBlock = this.blockFactory.currentBlock;
-		// Pause or unpause
-		if (keyPressed.PAUSE) {
-			if (this.animating) {
-				this.animating = false;
-				this.renderPause();
-			} else {
-				this.animating = true;
-				this.renderGameInterface();
-			}
-			this.controlManager.clearKey('PAUSE');
-		}
-		// Speed up the block or disable bonus speed
-		if (keyPressed.DOWN) {
-			this.interval = CONST.SLAM_INTERVAL;
-		} else if (keyPressed.DOWN === false) {
-			this.interval = this.originalInterval;
-			this.controlManager.clearKey('DOWN');
-		}
-		// Freeze the block
-		if (keyPressed.UP) {
-			this.interval = Infinity;
-		} else if (keyPressed.UP === false) {
-			this.interval = this.originalInterval;
-			this.controlManager.clearKey('UP');
-		}
-		// Move the block left
-		if (keyPressed.LEFT) {
+
+		if (this.pressedLeft) {
 			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x - 1, currentBlock.y)) {
 				currentBlock.x--;
 			}
-			this.controlManager.clearKey('LEFT');
 		}
-		// Move the block right
-		if (keyPressed.RIGHT) {
+
+		if (this.pressedRight) {
 			if (!this.fieldManager.isColiding(currentBlock, currentBlock.x + 1, currentBlock.y)) {
 				currentBlock.x++;
 			}
-			this.controlManager.clearKey('RIGHT');
-		}
-		// Rotate the block anticlockwise
-		if (keyPressed.ROTATE_LEFT) {
-			const newBlock = currentBlock.duplicate();
-			newBlock.rotateLeft();
-			if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
-				this.blockFactory.currentBlock = newBlock;
-			}
-			this.controlManager.clearKey('ROTATE_LEFT');
-		}
-		// Rotate the block clockwise
-		if (keyPressed.ROTATE_RIGHT) {
-			const newBlock = currentBlock.duplicate();
-			newBlock.rotateRight();
-			if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
-				this.blockFactory.currentBlock = newBlock;
-			}
-			this.controlManager.clearKey('ROTATE_RIGHT');
 		}
 	}
 
@@ -182,12 +152,12 @@ class Tetris {
 
 	private processMenu(): void {
 		this.particleFactory.processParticles();
-		if (this.particleFactory.particles.length < CONST.MENU_PARTICLE_COUNT) {
-			const colors = Object.values(CONST.COLORS);
-			for (let i = this.particleFactory.particles.length; i < CONST.MENU_PARTICLE_COUNT; i++) {
+		if (this.particleFactory.particles.length < constants.MENU_PARTICLE_COUNT) {
+			const colors = Object.values(constants.COLORS);
+			for (let i = this.particleFactory.particles.length; i < constants.MENU_PARTICLE_COUNT; i++) {
 				this.particleFactory.createParticle(
-					Math.floor(CONST.CANVAS_WIDTH / 2),
-					Math.floor(CONST.CANVAS_HEIGHT / 2),
+					Math.floor(constants.CANVAS_WIDTH / 2),
+					Math.floor(constants.CANVAS_HEIGHT / 2),
 					colors[utils.randomFromTo(0, colors.length - 1, true)],
 					utils.randomFromTo(0, 10)
 				);
@@ -214,7 +184,70 @@ class Tetris {
 		requestAnimationFrame(this.loop)
 	}
 
+	private initControls(): void {
+		this.controlManager.init();
+		this.controlManager.setListener('keydown', (keyCode, controls) => {
+			const currentBlock = this.blockFactory.currentBlock;
+
+			switch(keyCode) {
+				case controls.PAUSE:
+					this.paused = !this.paused;
+					this.paused ? this.renderPause() : this.renderGameInterface();
+					break;
+				case controls.DOWN:
+					this.interval = constants.SLAM_INTERVAL;
+					break;
+				case controls.UP:
+					this.interval = Infinity; // TODO: Remove this
+					break;
+				case controls.LEFT:
+					this.pressedLeft = true;
+					break;
+				case controls.RIGHT:
+					this.pressedRight = true;
+					break;
+				case controls.ROTATE_LEFT: {
+					const newBlock = currentBlock.duplicate();
+					newBlock.rotateLeft();
+					if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
+						this.blockFactory.currentBlock = newBlock;
+					}
+					break;
+				}
+				case controls.ROTATE_RIGHT: {
+					const newBlock = currentBlock.duplicate();
+					newBlock.rotateRight();
+					if (!this.fieldManager.isColiding(newBlock, newBlock.x, newBlock.y)) {
+						this.blockFactory.currentBlock = newBlock;
+					}
+					break;
+				}
+			}
+		});
+		this.controlManager.setListener('keyup', (keyCode, controls) => {
+			switch(keyCode) {
+				case controls.DOWN:
+				case controls.UP:
+					this.interval = this.originalInterval;
+					break;
+				case controls.LEFT:
+					this.pressedLeft = false;
+					break;
+				case controls.RIGHT:
+					this.pressedRight = false;
+					break;
+			}
+		});
+	}
+
+	private recalculateInterval(): void {
+		this.originalInterval = 475 - (this.level * 25);
+		this.interval = this.originalInterval;
+	}
+
 	private gameSetup(): void {
+		this.level = this.initialLevel;
+		this.recalculateInterval();
 		this.fieldManager.init();
 		this.blockFactory.init();
 		this.audioManager.init();
@@ -224,11 +257,14 @@ class Tetris {
 		this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 	}
 
+	private increaseLevel(): void {
+		this.level++;
+		this.recalculateInterval();
+	}
+
 	private setLevel(level: number): void {
+		this.initialLevel = level;
 		this.level = level;
-		const newInterval = 475 - (level * 25);
-		this.originalInterval = newInterval;
-		this.interval = newInterval;
 	}
 
 	private startGame(): void {
@@ -259,7 +295,9 @@ class Tetris {
 		this.domManager.renderComponent(components.GameInterface, {
 			score: String(this.scoreManager.score),
 			highScore: String(this.scoreManager.highScore),
-			keys: this.controlManager.options,
+			keys: this.controlManager.controls,
+			clearedRows: String(this.scoreManager.clearedRows),
+			level: String(this.level),
 		});
 	}
 
@@ -284,6 +322,7 @@ class Tetris {
 
 	public init(): void {
 		this.animating = true;
+		this.initControls();
 		this.gameSetup();
 		this.domManager.init();
 		this.renderMenu();

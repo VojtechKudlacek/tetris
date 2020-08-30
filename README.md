@@ -2,7 +2,7 @@
 
 ## To Do
 
-- Create component system
+- Update controls
 - Add level increase
 - Add delay after clearing a row
 - Finish rendering tools

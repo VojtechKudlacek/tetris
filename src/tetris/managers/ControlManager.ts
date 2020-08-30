@@ -1,102 +1,42 @@
 class ControlManager {
 
-	//* Private readonly
-
 	private readonly STORAGE_KEY: string = 'controls';
 
-	private readonly DEFAULT_HOLDABLE_KEYS: HoldableOptions = {
-		LEFT: 37,
-		RIGHT: 39,
-		DOWN: 40,
-		UP: 38,
+	private readonly DEFAULT_CONTROLS: Controls = {
+		LEFT: 37, // Arrow left
+		RIGHT: 39, // Arrow right
+		DOWN: 40, // Arrow down
+		UP: 38, // Arrow up
+		PAUSE: 80, // P
+		ROTATE_LEFT: 65, // A
+		ROTATE_RIGHT: 83, // S
 	};
 
-	private readonly DEFAULT_PRESSABLE_KEYS: PressableOptions = {
-		PAUSE: 80,
-		ROTATE_LEFT: 65,
-		ROTATE_RIGHT: 83,
-	};
+	private listeners: Dictionary<ControlListener> = {};
 
-	//* Private
+	public controls!: Controls;
 
-	private holdableKeys!: HoldableOptions;
-	private pressableKeys!: PressableOptions;
-
-	private keyValues: KeyValues = {
-		LEFT: null,
-		RIGHT: null,
-		DOWN: null,
-		UP: null,
-		PAUSE: null,
-		ROTATE_LEFT: null,
-		ROTATE_RIGHT: null,
-	};
-
-	private keyDownListener!: KeyboardListener;
-	private keyUpListener!: KeyboardListener;
-
-	//* Private
-
-	private initKeys(): void {
-		const customKeys = localStorage.getItem(this.STORAGE_KEY);
-		if (customKeys) {
-			const parsedCustomKeys: KeysReference = JSON.parse(customKeys);
-			this.holdableKeys = parsedCustomKeys.holdableKeys;
-			this.pressableKeys = parsedCustomKeys.pressableKeys;
+	private initControls(): void {
+		const customControls = localStorage.getItem(this.STORAGE_KEY);
+		if (customControls) {
+			this.controls = JSON.parse(customControls) as Controls;
 		} else {
-			this.holdableKeys = this.DEFAULT_HOLDABLE_KEYS;
-			this.pressableKeys = this.DEFAULT_PRESSABLE_KEYS;
+			this.controls = this.DEFAULT_CONTROLS;
 		}
 	}
 
 	private initListeners(): void {
-		const holdableKeysKeyCodes: NumDictionary = {};
-		Object.keys(this.holdableKeys).forEach((key) => { holdableKeysKeyCodes[this.holdableKeys[key]] = key; })
-
-		const pressableKeysKeyCodes: NumDictionary = {};
-		Object.keys(this.pressableKeys).forEach((key) => { pressableKeysKeyCodes[this.pressableKeys[key]] = key; })
-
-		this.keyDownListener = ({ keyCode }) => {
-			if (holdableKeysKeyCodes[keyCode]) {
-				this.keyValues[holdableKeysKeyCodes[keyCode]] = true;
-			}
-			if (pressableKeysKeyCodes[keyCode]) {
-				this.keyValues[pressableKeysKeyCodes[keyCode]] = true;
-			}
-		};
-
-		this.keyUpListener = ({ keyCode }) => {
-			if (holdableKeysKeyCodes[keyCode]) {
-				this.keyValues[holdableKeysKeyCodes[keyCode]] = false;
-			}
-		};
-
-		window.addEventListener('keydown', this.keyDownListener);
-		window.addEventListener('keyup', this.keyUpListener);
+		window.addEventListener('keydown', ({ keyCode }) => this.listeners.keydown && this.listeners.keydown(keyCode, this.controls));
+		window.addEventListener('keyup', ({ keyCode }) => this.listeners.keyup && this.listeners.keyup(keyCode, this.controls));
 	}
 
-	//* Public
+	public setListener(event: AvailableEvent, listener: ControlListener): void {
+		this.listeners[event] = listener;
+	}
 
 	public init(): void {
-		this.initKeys();
+		this.initControls();
 		this.initListeners();
-	}
-
-	public clearKey(key: keyof (HoldableOptionsBase & PressableOptionsBase)): void {
-		this.keyValues[key] = null;
-	}
-
-	//* Getters
-
-	public get keyPressed(): KeyValues {
-		return this.keyValues;
-	}
-
-	public get options(): KeysReference {
-		return {
-			holdableKeys: this.holdableKeys,
-			pressableKeys: this.pressableKeys,
-		};
 	}
 
 }
