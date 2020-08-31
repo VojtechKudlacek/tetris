@@ -161,6 +161,10 @@ class Tetris {
 				// Update next block preview
 				this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 				if (clearedRows) {
+					// Shake for TETRIS
+					if (clearedRows >= 4) {
+						this.domManager.shake();
+					}
 					// This is behind the cleared rows condition for little optimization
 					if (this.shouldIncreaseLevel) {
 						// Level increment logic

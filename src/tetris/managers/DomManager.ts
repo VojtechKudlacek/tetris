@@ -1,5 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from 'tetris/const';
 import { createDomElement } from 'tetris/utils/dom';
+import { randomFromTo } from 'tetris/utils';
 
 /** Class to manage DOM */
 class DomManager {
@@ -30,6 +31,21 @@ class DomManager {
 	public renderComponent<P>(component: Component<P>, args: P): void {
 		this.uiRenderer.innerHTML = '';
 		this.uiRenderer.appendChild(component(args));
+	}
+
+	/**
+	 * Shake with the parent element to shake everything
+	 * @param shakes Number of shakes
+	 */
+	public shake(shakes: number = 10): void {
+		if (shakes > 0) {
+			this.parent.style.left = `${randomFromTo(-5, 5, true)}px`;
+			this.parent.style.top = `${randomFromTo(-5, 5, true)}px`;
+			setTimeout(() => this.shake(shakes - 1), 50);
+		} else {
+			this.parent.style.left = '';
+			this.parent.style.top = '';
+		}
 	}
 
 	/** Set root sizes and append renderer and UI layer */
