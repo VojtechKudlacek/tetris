@@ -62,7 +62,7 @@ class ParticleFactory {
 	}
 
 	/**
-	 * Render particles
+	 * Renders particles
 	 * @param ctx Context to draw particles to
 	 */
 	public drawParticles(ctx: CanvasRenderingContext2D): void {
@@ -72,6 +72,11 @@ class ParticleFactory {
 			ctx.strokeStyle = particle.color;
 			ctx.strokeRect(particle.x, particle.y, particle.radius, particle.radius);
 		}
+	}
+
+	/** Returns number of particles */
+	public get count(): number {
+		return this.particles.length;
 	}
 
 }

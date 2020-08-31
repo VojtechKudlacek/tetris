@@ -32,6 +32,6 @@ export const SLAM_INTERVAL = 25;
 /** Number of levels */
 export const LEVEL_COUNT = 18;
 /** Number of rows to be cleared for increasing the level */
-export const ROWS_TO_INCREASE_LEVEL = 30;
+export const ROWS_TO_INCREASE_LEVEL = 60;
 /** Number of ticks to delay next block movement */
-export const MOVEMENT_DELAY = 20;
+export const MOVEMENT_DELAY = 15;

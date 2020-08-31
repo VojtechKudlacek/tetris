@@ -52,7 +52,7 @@ class Block implements Vector {
 	public rotateLeft(): void {
 		const newValue = [];
 		for (let col = 0; col < this.value[0].length; col++) {
-			const newRow = this.value.map((row) => row[col]).reverse();
+			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
 			newValue.push(newRow);
 		}
 		this.value = newValue;
@@ -62,7 +62,7 @@ class Block implements Vector {
 	public rotateRight(): void {
 		const newValue = [];
 		for (let col = 0; col < this.value[0].length; col++) {
-			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
+			const newRow = this.value.map((row) => row[col]).reverse();
 			newValue.push(newRow);
 		}
 		this.value = newValue;
@@ -83,15 +83,17 @@ class Block implements Vector {
 	}
 
 	/**
-	 * Iterate through the block and call given function for every cell
+	 * Iterate through the block and call given function for every cell with value
 	 * @param fn Function called for every cell with given position, colision value and reference of the block
 	 */
-	public iterate(fn: (row: number, col: number, value: number, block: Block) => void | boolean): void {
+	public iterate(fn: (row: number, col: number, block: Block) => void | boolean): void {
 		let stopIterating: void | boolean = false;
 		for (let row = 0; row < this.tiles; row++) {
 			if (stopIterating) { break; }
 			for (let col = 0; col < this.tiles; col++) {
-				stopIterating = fn(row, col, this.value[row][col], this);
+				if (this.value[row][col]) {
+					stopIterating = fn(row, col, this);
+				}
 				if (stopIterating) { break; }
 			}
 		}
