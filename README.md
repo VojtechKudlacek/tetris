@@ -4,5 +4,5 @@
 
 - Add delay after clearing a row
 - Add sounds
-- Finish comments
+- Customizable controls
 - Finish README

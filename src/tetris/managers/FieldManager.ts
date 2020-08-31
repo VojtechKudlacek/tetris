@@ -21,14 +21,16 @@ class FieldManager {
 	}
 
 	/**
-	 * Iterate through the 2D array and for every cell call given function
+	 * Iterate through the 2D array and for every filled cell call given function
 	 * @param fn Function called for every field cell with given position, colision value and color
 	 */
-	public iterate(fn: (row: number, col: number, value: number, color: string) => void): void {
+	public iterate(fn: (row: number, col: number, color: string) => void): void {
 		// Using constants values rather than array length for better readability
 		for (let row = 0; row < ROW_COUNT; row++) {
 			for (let col = 0; col < COL_COUNT; col++) {
-				fn(row, col, this.field[row][col], this.colors[row][col]);
+				if (this.field[row][col]) {
+					fn(row, col, this.colors[row][col]);
+				}
 			}
 		}
 	}
@@ -44,15 +46,17 @@ class FieldManager {
 	}
 
 	/**
-	 * Iterate through the field columns in given row and call given function for every cell
+	 * Iterate through the field columns in given row and call given function for every filed cell
 	 * @param row Index of iterated row
 	 * @param fn Function called for every cell in the iterated row
 	 */
-	public iterateCols(row: number, fn: (col: number, value: number, color: string) => void): void {
+	public iterateCols(row: number, fn: (col: number, color: string) => void): void {
 		// This should never happend if used properly, but it prevents some possible errors
 		if (!this.field[row]) { return; }
 		for (let col = 0; col < COL_COUNT; col++) {
-			fn(col, this.field[row][col], this.colors[row][col]);
+			if (this.field[row][col]) {
+				fn(col, this.colors[row][col]);
+			}
 		}
 	}
 
@@ -74,8 +78,8 @@ class FieldManager {
 	 * @param block Block instance
 	 */
 	public placeBlock(block: Block): void {
-		block.iterate((row, col, value) => {
-			if (value && (row + block.y) >= 0) {
+		block.iterate((row, col) => {
+			if ((row + block.y) >= 0) {
 				this.field[row + block.y][col + block.x] = 1;
 				this.colors[row + block.y][col + block.x] = block.color;
 			}
@@ -101,19 +105,17 @@ class FieldManager {
 	 */
 	public isColiding(block: Block, x: number, y: number): boolean {
 		let coliding: boolean = false;
-		block.iterate((row, col, value) => {
-			if (value) { // Check if block has value at current iterated position, it is still 2D array with possible empty cells
-				if ( // Colission system
-					(x + col < 0) || // If block is offscreen (left)
-					(x + col >= COL_COUNT) || // If block is offscreen (right)
-					(y + row >= ROW_COUNT) || // If block is offscreen (bottom)
-					(this.field[y + row] && this.field[y + row][x + col]) // If block coliding with another placed block
-				) {
-					// Set the coliding value to true and break
-					coliding = true;
-					// `true` here is for breaking the iteration
-					return true;
-				}
+		block.iterate((row, col) => {
+			if ( // Colission system
+				(x + col < 0) || // If block is offscreen (left)
+				(x + col >= COL_COUNT) || // If block is offscreen (right)
+				(y + row >= ROW_COUNT) || // If block is offscreen (bottom)
+				(this.field[y + row] && this.field[y + row][x + col]) // If block coliding with another placed block
+			) {
+				// Set the coliding value to true and break
+				coliding = true;
+				// `true` here is for breaking the iteration
+				return true;
 			}
 			return false;
 		});

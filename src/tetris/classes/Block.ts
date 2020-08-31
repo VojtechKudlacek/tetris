@@ -5,11 +5,11 @@ type BlockValue = Array<Array<number>>;
 
 /** Default block settings */
 interface Properties {
-	minSize: number;
-	maxSize: number;
-	tiles: number;
 	value: BlockValue;
 	color: string;
+	tiles?: number;
+	minSize?: number;
+	maxSize?: number;
 	preview?: BlockValue;
 	x?: number;
 	y?: number;
@@ -36,13 +36,13 @@ class Block implements Vector {
 	public y: number;
 
 	constructor(props: Properties) {
-		this.tiles = props.tiles;
 		this.color = props.color;
-		this.minSize = props.minSize;
-		this.maxSize = props.maxSize;
 		this.value = props.value;
 		// Preview can be passed in to reduce calculations
 		this.preview = props.preview || this.value.filter((row) => row.includes(1));
+		this.minSize = props.minSize ?? this.preview.length;
+		this.maxSize = props.maxSize ?? this.value.length;
+		this.tiles = props.tiles ?? this.maxSize;
 		// Use given X and Y position or calculate default one
 		this.x = props.x ?? (COL_COUNT / 2) - Math.floor(this.tiles / 2);
 		this.y = props.y ?? Math.ceil(this.tiles / 2) * (-1);
@@ -52,7 +52,7 @@ class Block implements Vector {
 	public rotateLeft(): void {
 		const newValue = [];
 		for (let col = 0; col < this.value[0].length; col++) {
-			const newRow = this.value.map((row) => row[col]).reverse();
+			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
 			newValue.push(newRow);
 		}
 		this.value = newValue;
@@ -62,7 +62,7 @@ class Block implements Vector {
 	public rotateRight(): void {
 		const newValue = [];
 		for (let col = 0; col < this.value[0].length; col++) {
-			const newRow = this.value.map((row) => row[this.value[0].length - col - 1])
+			const newRow = this.value.map((row) => row[col]).reverse();
 			newValue.push(newRow);
 		}
 		this.value = newValue;
@@ -83,15 +83,17 @@ class Block implements Vector {
 	}
 
 	/**
-	 * Iterate through the block and call given function for every cell
+	 * Iterate through the block and call given function for every cell with value
 	 * @param fn Function called for every cell with given position, colision value and reference of the block
 	 */
-	public iterate(fn: (row: number, col: number, value: number, block: Block) => void | boolean): void {
+	public iterate(fn: (row: number, col: number, block: Block) => void | boolean): void {
 		let stopIterating: void | boolean = false;
 		for (let row = 0; row < this.tiles; row++) {
 			if (stopIterating) { break; }
 			for (let col = 0; col < this.tiles; col++) {
-				stopIterating = fn(row, col, this.value[row][col], this);
+				if (this.value[row][col]) {
+					stopIterating = fn(row, col, this);
+				}
 				if (stopIterating) { break; }
 			}
 		}

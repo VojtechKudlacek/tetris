@@ -2,13 +2,12 @@ import Block from 'tetris/classes/Block';
 import * as utils from 'tetris/utils';
 import { COLORS } from 'tetris/const';
 
+/** Class for generating blocks */
 class BlockFactory {
 
+	/** List of default blocks */
 	private readonly BLOCKS: Array<Block> = [
 		new Block({
-			minSize: 1,
-			maxSize: 4,
-			tiles: 4,
 			value: [
 				[0, 0, 0, 0],
 				[1, 1, 1, 1],
@@ -18,9 +17,6 @@ class BlockFactory {
 			color: COLORS.BLUE
 		}),
 		new Block({
-			minSize: 2,
-			maxSize: 3,
-			tiles: 3,
 			value: [
 				[0, 0, 0],
 				[1, 1, 1],
@@ -29,9 +25,6 @@ class BlockFactory {
 			color: COLORS.GREEN
 		}),
 		new Block({
-			minSize: 2,
-			maxSize: 3,
-			tiles: 3,
 			value: [
 				[0, 0, 0],
 				[1, 1, 1],
@@ -40,9 +33,6 @@ class BlockFactory {
 			color: COLORS.PURPLE
 		}),
 		new Block({
-			minSize: 2,
-			maxSize: 2,
-			tiles: 2,
 			value: [
 				[1, 1],
 				[1, 1]
@@ -50,9 +40,6 @@ class BlockFactory {
 			color: COLORS.ORANGE
 		}),
 		new Block({
-			minSize: 2,
-			maxSize: 3,
-			tiles: 3,
 			value: [
 				[0, 1, 1],
 				[1, 1, 0],
@@ -61,9 +48,6 @@ class BlockFactory {
 			color: COLORS.PINK
 		}),
 		new Block({
-			minSize: 2,
-			maxSize: 3,
-			tiles: 3,
 			value: [
 				[0, 0, 0],
 				[1, 1, 1],
@@ -72,9 +56,6 @@ class BlockFactory {
 			color: COLORS.RED
 		}),
 		new Block({
-			minSize: 2,
-			maxSize: 3,
-			tiles: 3,
 			value: [
 				[1, 1, 0],
 				[0, 1, 1],
@@ -84,15 +65,20 @@ class BlockFactory {
 		})
 	];
 
+	/** List of available blocks */
 	private picker: Array<Block> = [];
 
+	/** Next playable block */
 	public nextBlock!: Block;
+	/** Curent playable block */
 	public currentBlock!: Block;
 
+	/** Fill list of available blocks */
 	private fillPicker(): void {
 		this.picker = this.BLOCKS.map((block) => block.duplicate());
 	}
 
+	/** Returns a pseudo random block */
 	private pickRandomBlock(): Block {
 		if (!this.picker.length) {
 			// If picker is empty, refill it
@@ -102,11 +88,14 @@ class BlockFactory {
 		return this.picker.splice(utils.randomFromTo(0, this.picker.length - 1, true), 1)[0];
 	}
 
+	/** Initialize block picker and playable blocks */
 	public init(): void {
-		this.nextBlock = this.pickRandomBlock();
+		this.fillPicker();
 		this.currentBlock = this.pickRandomBlock();
+		this.nextBlock = this.pickRandomBlock();
 	}
 
+	/** Set curent block from next one and pick new block for next one */
 	public useNextBlock(): void {
 		this.currentBlock = this.nextBlock;
 		this.nextBlock = this.pickRandomBlock();

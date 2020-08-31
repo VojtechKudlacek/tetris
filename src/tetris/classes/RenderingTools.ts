@@ -100,10 +100,8 @@ class RenderingTools {
 			//* Fill are with black color
 			this.drawRect(ctx, 0, 0, w, h, '#000000');
 			//* Draw blocks with its color
-			fieldManager.iterate((row, col, value, color) => {
-				if (value) {
-					this.drawBlock(ctx, col * constants.TILE_SIZE, row * constants.TILE_SIZE, color);
-				}
+			fieldManager.iterate((row, col, color) => {
+				this.drawBlock(ctx, col * constants.TILE_SIZE, row * constants.TILE_SIZE, color);
 			});
 			//* Draw sidebar border
 			// Yes, I rather use rect than a line ¯\_(ツ)_/¯
@@ -143,12 +141,10 @@ class RenderingTools {
 	 * @param block Source of the block
 	 */
 	public drawCurrentBlock(block: Block): void {
-		block.iterate((row, col, value, block) => {
-			if (value) {
-				const x = (block.x + col) * constants.TILE_SIZE;
-				const y = (block.y + row) * constants.TILE_SIZE;
-				this.drawBlock(this.ctx, x, y, block.color);
-			}
+		block.iterate((row, col) => {
+			const x = (block.x + col) * constants.TILE_SIZE;
+			const y = (block.y + row) * constants.TILE_SIZE;
+			this.drawBlock(this.ctx, x, y, block.color);
 		});
 	}
 
