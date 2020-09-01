@@ -45,7 +45,16 @@ class Block implements Vector {
 		this.tiles = props.tiles ?? this.maxSize;
 		// Use given X and Y position or calculate default one
 		this.x = props.x ?? (COL_COUNT / 2) - Math.floor(this.tiles / 2);
-		this.y = props.y ?? Math.ceil(this.tiles / 2) * (-1);
+		if (props.y === undefined) {
+			let emptyRows = 0;
+			for (let row = 0; row < this.maxSize; row++) {
+				if (this.value[row].includes(1)) { break; }
+				emptyRows++;
+			}
+			this.y = -(this.minSize + emptyRows);
+		} else {
+			this.y = props.y;
+		}
 	}
 
 	/** Rotate block value anti-clockwise */

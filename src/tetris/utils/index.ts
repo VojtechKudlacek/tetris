@@ -10,3 +10,5 @@ export const createArray = <T>(length: number, fill: T): Array<T> => {
 export const create2DArray = <T>(height: number, width: number, fill: T): Array<Array<T>> => {
 	return Array.from({ length: height }, () => Array.from({ length: width }, () => fill));
 };
+
+export const delay = async (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));

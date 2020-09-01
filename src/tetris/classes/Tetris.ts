@@ -42,6 +42,11 @@ class Tetris {
 	/** Variable to prevent continuous droping */
 	private ableToDrop: boolean = true;
 
+	/** Rows to be cleared after delay */
+	private rowsToClear: Array<number> = [];
+	/** Number of blinks before clearing the lines */
+	private clearDelayIterations: number = 0;
+
 	/** Game is running (or in menu) */
 	private isInGame: boolean = false;
 	/** Game ended */
@@ -129,21 +134,16 @@ class Tetris {
 		}
 	}
 
-	/** Place the block and do everything else */
-	private placeBlock(slamed: boolean = false): void {
-		this.fieldManager.placeBlock(this.blockFactory.currentBlock);
-		// Draw particles for slaming the block
-		if (slamed || this.interval <= constants.SLAM_INTERVAL) {
-			this.blockFactory.currentBlock.iterate((row, col, block) => {
-				this.particleFactory.createParticles(
-					((col + block.x) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
-					((row + block.y) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
-					block.color, 3, -1
-				);
-			})
+	/** Clear the rows after a delay */
+	private async clearRows(): Promise<number> {
+		if (!this.rowsToClear.length) { return 0; }
+		this.clearDelayIterations = constants.CLEAR_DELAY_ITERATIONS;
+		while (this.clearDelayIterations > 0) {
+			// Await in while D:<
+			await utils.delay(constants.CLEAR_DELAY);
+			this.clearDelayIterations--;
 		}
-		// Clear filled rows from the field
-		const clearedRows = this.fieldManager.clearFilledRows((row, cleared) => {
+		const clearedRows = this.fieldManager.clearRows(this.rowsToClear, (row, cleared) => {
 			this.fieldManager.iterateCols(row, (col, color) => {
 				this.particleFactory.createParticles(
 					(col * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
@@ -154,6 +154,28 @@ class Tetris {
 			// Adding score in loop for easier combo counting
 			this.scoreManager.add(this.level, cleared - 1);
 		});
+		this.rowsToClear = [];
+		return clearedRows;
+	}
+
+	/** Place the block and do everything else */
+	private async placeBlock(slamed: boolean = false): Promise<void> {
+		this.fieldManager.placeBlock(this.blockFactory.currentBlock);
+		// Draw particles for slaming the block
+		if (slamed) { this.domManager.shake(3); }
+		if (slamed || this.interval <= constants.SLAM_INTERVAL) {
+			this.blockFactory.currentBlock.iterate((row, col, block) => {
+				this.particleFactory.createParticles(
+					((col + block.x) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+					((row + block.y) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+					block.color, 3, -1
+				);
+			})
+		}
+		// Clear filled rows from the field
+		this.rowsToClear = this.fieldManager.getFilledRows();
+		// It's async so there can be the animation
+		const clearedRows = await this.clearRows();
 
 		if (this.fieldManager.isBlockInFirstRow) {
 			// End the game if there is a block in the first row
@@ -254,6 +276,10 @@ class Tetris {
 			}
 			// Draw current block
 			this.renderingTools.drawCurrentBlock(this.blockFactory.currentBlock, this.fieldManager);
+			// Row removing animation
+			if (this.clearDelayIterations % 2) {
+				this.renderingTools.hideRows(this.rowsToClear);
+			}
 		}
 		// Draw particles
 		this.particleFactory.drawParticles(this.ctx);
@@ -269,7 +295,7 @@ class Tetris {
 		// Process particles
 		this.particleFactory.processParticles();
 		// Check if state is running game or menu
-		if (this.isInGame && !this.isGameOver) {
+		if (this.isInGame && !this.isGameOver && this.clearDelayIterations === 0) {
 			this.processControls();
 			this.processGame(time);
 		} else if (!this.isInGame) {

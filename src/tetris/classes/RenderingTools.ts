@@ -109,14 +109,16 @@ class RenderingTools {
 	 */
 	public preDrawGame(fieldManager: FieldManager): void {
 		this.gamePreRenderer.draw((ctx, w, h) => {
-			//* Fill are with black color
+			//* Fill with black color
 			this.drawRect(ctx, 0, 0, w, h, '#000000');
+			//* Fill the first row with the red color
+			this.drawRect(ctx, 0, 0, constants.GAME_WIDTH, constants.TILE_SIZE, '#ff000022');
 			//* Draw blocks with its color
 			fieldManager.iterate((row, col, color) => {
 				this.drawBlock(ctx, col * constants.TILE_SIZE, row * constants.TILE_SIZE, color);
 			});
 			//* Draw sidebar border
-			// Yes, I rather use rect than a line ¯\_(ツ)_/¯
+			// Yes, I rather use the rectangle than a line ¯\_(ツ)_/¯
 			this.drawRect(ctx, constants.GAME_WIDTH, 0, constants.SIDEBAR_BORDER_WIDTH, h, '#ffffff');
 		});
 	}
@@ -165,9 +167,21 @@ class RenderingTools {
 
 		for (let key in shadows) {
 			const x = Number(key);
-			const y = shadows[x];
+			const y = shadows[x] > 1 ? shadows[x] : 1;
 			const endOfShadow = (fieldManager.firstValueInCol(x, Math.max(y, 0)) - y) * constants.TILE_SIZE;
 			this.drawBlockShadow(this.ctx, x * constants.TILE_SIZE, y * constants.TILE_SIZE, endOfShadow, block.color);
+		}
+	}
+
+
+	/**
+	 * Clear rows from the renderer
+	 * @param rowIndexes Array with indexes of the rows to be cleared
+	 */
+	public hideRows(rowIndexes: Array<number>): void {
+		for (let i = 0; i < rowIndexes.length; i++) {
+			const y = rowIndexes[i] * constants.TILE_SIZE;
+			this.ctx.clearRect(0, y, constants.GAME_WIDTH, constants.TILE_SIZE);
 		}
 	}
 

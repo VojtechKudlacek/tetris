@@ -122,19 +122,29 @@ class FieldManager {
 		return coliding;
 	};
 
-	/**
-	 * Iterate through the field and clear filled rows
-	 * @param fn Function called for every cleared row
-	 */
-	public clearFilledRows(fn: (row: number, cleared: number) => void): number {
-		let cleared = 0;
+	/** Returns array with indexes of filled rows  */
+	public getFilledRows(): Array<number> {
+		const filledRows: Array<number> = [];
 		this.iterateRows((row) => {
 			if (this.isRowFilled(row)) {
-				this.clearRow(row);
-				// Reason of this function is only for particles generation on row clear
-				fn(row, ++cleared);
+				filledRows.push(row);
 			}
 		});
+		return filledRows;
+	}
+
+	/**
+	 * Iterate through the field and clear filled rows
+	 * @param rows Array with row indexes to be cleared
+	 * @param fn Function called for every cleared row
+	 */
+	public clearRows(rows: Array<number>, fn: (row: number, cleared: number) => void): number {
+		let cleared = 0;
+		for (let row of rows) {
+			this.clearRow(row);
+			// Reason of this function is only for particles generation on row clear
+			fn(row, ++cleared);
+		}
 		return cleared;
 	}
 
