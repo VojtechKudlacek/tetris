@@ -438,6 +438,11 @@ class Tetris {
 		this.startGame();
 	}
 
+	/** Show controls edit screen */
+	private onControls = (): void => {
+		this.renderControlsEditScreen();
+	}
+
 	//* Component rendering
 
 	private renderGameInterface(): void {
@@ -453,7 +458,8 @@ class Tetris {
 	/** Render menu with level select */
 	private renderMenuScreen(): void {
 		this.domManager.renderComponent(components.Menu, {
-			onLevelSelect: this.onLevelSelect
+			onLevelSelect: this.onLevelSelect,
+			onControls: this.onControls,
 		});
 	}
 
@@ -470,6 +476,19 @@ class Tetris {
 			onMenu: this.onMenu,
 			onRestart: this.onRestart,
 		});
+	}
+
+	/** Renders screen for managing custom keys */
+	private renderControlsEditScreen(): void {
+		this.domManager.renderComponent(components.ControlSettings, {
+			keys: this.controlManager.controls,
+			updateKey: this.controlManager.updateKey,
+			onMenu: this.onMenu,
+			onRestart: () => {
+				this.controlManager.restartKeys();
+				this.renderControlsEditScreen();
+			},
+		})
 	}
 
 	//* Exposed methods

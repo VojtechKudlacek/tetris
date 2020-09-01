@@ -182,6 +182,13 @@ code {
 	font-size: 14px;
 	font-weight: bold;
 	cursor: pointer;
+	outline: none;
+}
+
+.tetris-button:focus,
+.tetris-button:active {
+	border: 2px solid #ffffff;
+	border-radius: 0;
 }
 
 .tetris-button:hover {
@@ -197,4 +204,33 @@ code {
 
 .tetris-renderer {
 	display: block;
+}
+
+.tetris-controls-settings {
+	background: #000000;
+	border: 2px solid #ffffff;
+	width: 250px;
+	margin: auto;
+	padding: 15px;
+}
+
+.tetris-controls-edit {
+	padding: 20px 0;
+}
+
+.tetris-controls-row .tetris-controls-label {
+	margin: 0;
+	margin-right: 10px;
+	width: 80px;
+  display: inline-block;
+}
+
+.tetris-controls-button {
+	height: 22px;
+	font-size: 12px;
+}
+
+.tetris-controls-button.tetris-active {
+	color: #000000;
+	background: #ffffff;
 }
