@@ -191,7 +191,7 @@ class Tetris {
 				// Shake for TETRIS
 				// There could be `===`, this is just to be sure ¯\_(ツ)_/¯
 				if (clearedRows >= 4) {
-					this.domManager.shake();
+					this.domManager.shake(slamed ? 20 : 10);
 				}
 				// This is behind the cleared rows condition for little optimization
 				if (this.shouldIncreaseLevel) {
