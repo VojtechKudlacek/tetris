@@ -39,6 +39,8 @@ class Tetris {
 	private pressedRight: boolean = false;
 	/** Ticks before movement process */
 	private movementDelay: number = 0;
+	/** Variable to prevent continuous droping */
+	private ableToDrop: boolean = true;
 
 	/** Game is running (or in menu) */
 	private isInGame: boolean = false;
@@ -62,7 +64,7 @@ class Tetris {
 		this.domManager = new DomManager(parent);
 		this.domManager.createCanvas();
 		// Since when does `.getContext('2d')` can return undefined? ¯\_(ツ)_/¯
-		this.ctx = this.domManager.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+		this.ctx = this.domManager.canvas.getContext('2d') as CanvasRenderingContext2D;
 		this.renderingTools = new RenderingTools(this.ctx);
 		this.audioManager = new AudioManager();
 		this.controlManager = new ControlManager();
@@ -99,6 +101,18 @@ class Tetris {
 		this.recalculateInterval();
 	}
 
+	/** Hard drop the block */
+	private hardDrop(): void {
+		const currentBlock = this.blockFactory.currentBlock;
+		for (let y = currentBlock.y; y <= constants.ROW_COUNT; y++) {
+			if (this.fieldManager.isColiding(currentBlock, currentBlock.x, y + 1)) {
+				this.blockFactory.currentBlock.y = y;
+				this.placeBlock(true);
+				break;
+			}
+		}
+	}
+
 	/** Moves block one column left if possible */
 	private moveBlockLeft(): void {
 		const currentBlock = this.blockFactory.currentBlock;
@@ -115,65 +129,71 @@ class Tetris {
 		}
 	}
 
+	/** Place the block and do everything else */
+	private placeBlock(slamed: boolean = false): void {
+		this.fieldManager.placeBlock(this.blockFactory.currentBlock);
+		// Draw particles for slaming the block
+		if (slamed || this.interval <= constants.SLAM_INTERVAL) {
+			this.blockFactory.currentBlock.iterate((row, col, block) => {
+				this.particleFactory.createParticles(
+					((col + block.x) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+					((row + block.y) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+					block.color, 3, -1
+				);
+			})
+		}
+		// Clear filled rows from the field
+		const clearedRows = this.fieldManager.clearFilledRows((row, cleared) => {
+			this.fieldManager.iterateCols(row, (col, color) => {
+				this.particleFactory.createParticles(
+					(col * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+					(row * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
+					color, 5, (cleared * 3)
+				);
+			});
+			// Adding score in loop for easier combo counting
+			this.scoreManager.add(this.level, cleared - 1);
+		});
+
+		if (this.fieldManager.isBlockInFirstRow) {
+			// End the game if there is a block in the first row
+			this.endTheGame();
+		} else {
+			// Switch to next block
+			this.blockFactory.useNextBlock();
+			// Update game to render placed block
+			this.renderingTools.preDrawGame(this.fieldManager);
+			// Update next block preview
+			this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
+			if (clearedRows) {
+				// Shake for TETRIS
+				// There could be `===`, this is just to be sure ¯\_(ツ)_/¯
+				if (clearedRows >= 4) {
+					this.domManager.shake();
+				}
+				// This is behind the cleared rows condition for little optimization
+				if (this.shouldIncreaseLevel) {
+					// Level increment logic
+					this.increaseLevel();
+				}
+				// Optimization to not re-render every time block is placed
+				this.renderGameInterface();
+			}
+		}
+	}
+
 	//* Game processing
 
 	/** Process block movement */
 	private processMove(): void {
-		const currentBlock = this.blockFactory.currentBlock;
-
-		if (!this.fieldManager.isColiding(currentBlock, currentBlock.x, currentBlock.y + 1)) {
+		// Just to make the next line shorter ¯\_(ツ)_/¯
+		const { x, y } = this.blockFactory.currentBlock;
+		if (!this.fieldManager.isColiding(this.blockFactory.currentBlock, x, y + 1)) {
 			// If moved block isn't coliding, move the block down
-			currentBlock.y++;
+			this.blockFactory.currentBlock.y++;
 		} else {
 			// Otherwise place the block
-			this.fieldManager.placeBlock(this.blockFactory.currentBlock);
-			// Draw particles for slaming the block
-			if (this.interval <= constants.SLAM_INTERVAL) {
-				this.blockFactory.currentBlock.iterate((row, col, block) => {
-					this.particleFactory.createParticles(
-						((col + block.x) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
-						((row + block.y) * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
-						block.color, 3, -1
-					);
-				})
-			}
-			// Clear filled rows from the field
-			const clearedRows = this.fieldManager.clearFilledRows((row, cleared) => {
-				this.fieldManager.iterateCols(row, (col, color) => {
-					this.particleFactory.createParticles(
-						(col * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
-						(row * constants.TILE_SIZE) + constants.HALF_TILE_SIZE,
-						color, 5, (cleared * 3)
-					);
-				});
-				// Adding score in loop for easier combo counting
-				this.scoreManager.add(this.level, cleared - 1);
-			});
-
-			if (this.fieldManager.isBlockInFirstRow) {
-				// End the game if there is a block in the first row
-				this.endTheGame();
-			} else {
-				// Switch to next block
-				this.blockFactory.useNextBlock();
-				// Update game to render placed block
-				this.renderingTools.preDrawGame(this.fieldManager);
-				// Update next block preview
-				this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
-				if (clearedRows) {
-					// Shake for TETRIS
-					if (clearedRows >= 4) {
-						this.domManager.shake();
-					}
-					// This is behind the cleared rows condition for little optimization
-					if (this.shouldIncreaseLevel) {
-						// Level increment logic
-						this.increaseLevel();
-					}
-					// Optimization to not re-render every time block is placed
-					this.renderGameInterface();
-				}
-			}
+			this.placeBlock();
 		}
 	}
 
@@ -233,7 +253,7 @@ class Tetris {
 				this.renderingTools.drawNextBlock();
 			}
 			// Draw current block
-			this.renderingTools.drawCurrentBlock(this.blockFactory.currentBlock);
+			this.renderingTools.drawCurrentBlock(this.blockFactory.currentBlock, this.fieldManager);
 		}
 		// Draw particles
 		this.particleFactory.drawParticles(this.ctx);
@@ -282,12 +302,11 @@ class Tetris {
 		// Keydown for basically everything
 		this.controlManager.setListener('keydown', (keyCode, controls) => {
 			const currentBlock = this.blockFactory.currentBlock;
+			if (!this.isInGame || this.isGameOver) { return; }
 			switch (keyCode) {
 				case controls.PAUSE:
-					if (this.isInGame) {
-						this.isPaused = !this.isPaused;
-						this.isPaused ? this.renderPauseScreen() : this.renderGameInterface();
-					}
+					this.isPaused = !this.isPaused;
+					this.isPaused ? this.renderPauseScreen() : this.renderGameInterface();
 					break;
 				case controls.DOWN:
 					this.interval = constants.SLAM_INTERVAL;
@@ -321,6 +340,12 @@ class Tetris {
 					this.tryRotatedBlock(newBlock);
 					break;
 				}
+				case controls.DROP:
+					if (this.ableToDrop) {
+						this.ableToDrop = false;
+						this.hardDrop();
+					}
+					break;
 			}
 		});
 		// Keyup for block movement processing and removing fall boost
@@ -335,6 +360,9 @@ class Tetris {
 					break;
 				case controls.RIGHT:
 					this.pressedRight = false;
+					break;
+				case controls.DROP:
+					this.ableToDrop = true;
 					break;
 			}
 		});

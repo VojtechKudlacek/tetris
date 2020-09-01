@@ -139,6 +139,20 @@ class FieldManager {
 	}
 
 	/**
+	 * Returns index of first value in given column or field height for no value found
+	 * @param col Columns to be looked in
+	 * @param startRow Row to start looking from
+	 */
+	public firstValueInCol(col: number, startRow: number = 0): number {
+		for (let row = startRow; row < ROW_COUNT; row++) {
+			if (this.field[row][col]) {
+				return row;
+			}
+		}
+		return ROW_COUNT;
+	}
+
+	/**
 	 * Check if there is a block in the first row
 	 * Probably not to best way to check game over ¯\_(ツ)_/¯
 	 */

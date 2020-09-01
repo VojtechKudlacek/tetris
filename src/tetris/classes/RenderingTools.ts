@@ -81,6 +81,18 @@ class RenderingTools {
 	}
 
 	/**
+	 * Draw shadow from the block to the bottom
+	 * @param ctx Context for rendering
+	 * @param x X position in the context
+	 * @param y Y position in the context
+	 * @param color Color of the block
+	 */
+	private drawBlockShadow(ctx: CanvasRenderingContext2D, x: number, y1: number, y2: number, color: string): void {
+		// Adding the opacity to the color
+		this.drawRect(ctx, x, y1, constants.TILE_SIZE, y2, color + '22');
+	}
+
+	/**
 	 *
 	 * @param ctx Context for rendering
 	 * @param image Image to be rendered to the context
@@ -139,13 +151,24 @@ class RenderingTools {
 	/**
 	 * Draw current block to the renderer
 	 * @param block Source of the block
+	 * @param fieldManager Source of the game field to calculate shadow
 	 */
-	public drawCurrentBlock(block: Block): void {
+	public drawCurrentBlock(block: Block, fieldManager: FieldManager): void {
+		const shadows: NumDictionary<number> = {};
+
 		block.iterate((row, col) => {
-			const x = (block.x + col) * constants.TILE_SIZE;
-			const y = (block.y + row) * constants.TILE_SIZE;
-			this.drawBlock(this.ctx, x, y, block.color);
+			const x = block.x + col;
+			const y = block.y + row;
+			this.drawBlock(this.ctx, x * constants.TILE_SIZE, y * constants.TILE_SIZE, block.color);
+			if (!shadows[x] || shadows[x] < y) { shadows[x] = y; }
 		});
+
+		for (let key in shadows) {
+			const x = Number(key);
+			const y = shadows[x];
+			const endOfShadow = (fieldManager.firstValueInCol(x, Math.max(y, 0)) - y) * constants.TILE_SIZE;
+			this.drawBlockShadow(this.ctx, x * constants.TILE_SIZE, y * constants.TILE_SIZE, endOfShadow, block.color);
+		}
 	}
 
 	/** Draw cached game to the renderer */

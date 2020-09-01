@@ -39,8 +39,8 @@ class DomManager {
 	 */
 	public shake(shakes: number = 10): void {
 		if (shakes > 0) {
-			this.parent.style.left = `${randomFromTo(-5, 5, true)}px`;
-			this.parent.style.top = `${randomFromTo(-5, 5, true)}px`;
+			this.parent.style.left = `${randomFromTo(-10, 10, true)}px`;
+			this.parent.style.top = `${randomFromTo(-10, 10, true)}px`;
 			setTimeout(() => this.shake(shakes - 1), 50);
 		} else {
 			this.parent.style.left = '';

@@ -9,6 +9,7 @@ class ControlManager {
 		RIGHT: 39, // Arrow right
 		DOWN: 40, // Arrow down
 		UP: 38, // Arrow up
+		DROP: 32, // Space
 		PAUSE: 80, // P
 		ROTATE_LEFT: 65, // A
 		ROTATE_RIGHT: 83, // S
@@ -21,12 +22,14 @@ class ControlManager {
 
 	/** Initialize constrols from custom keys or default ones */
 	private initControls(): void {
+		this.controls = this.DEFAULT_CONTROLS;
 		const customControls = localStorage.getItem(this.STORAGE_KEY);
 		if (customControls) {
 			// I believe that users doesn't modify the local storage. :)
-			this.controls = JSON.parse(customControls) as Controls;
-		} else {
-			this.controls = this.DEFAULT_CONTROLS;
+			this.controls = {
+				...this.controls,
+				...JSON.parse(customControls) as Controls
+			};
 		}
 	}
 
