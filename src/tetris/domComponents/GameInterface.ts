@@ -10,13 +10,14 @@ interface Properties {
 	clearedRows: string;
 }
 
-const GameOver: Component<Properties> = ({ score, highScore, keys, level, clearedRows }) => {
+const GameInterface: Component<Properties> = ({ score, highScore, keys, level, clearedRows }) => {
 	const availableOptions = [
 		['Left', keys.LEFT],
 		['Right', keys.RIGHT],
 		['Rotate Left', keys.ROTATE_LEFT],
 		['Rotate Right', keys.ROTATE_RIGHT],
 		['Speed Up', keys.DOWN],
+		['Hard Drop', keys.DROP],
 		['Pause', keys.PAUSE],
 	];
 
@@ -56,4 +57,4 @@ const GameOver: Component<Properties> = ({ score, highScore, keys, level, cleare
 	});
 };
 
-export default GameOver;
+export default GameInterface;

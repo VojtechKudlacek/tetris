@@ -81,6 +81,18 @@ class RenderingTools {
 	}
 
 	/**
+	 * Draw shadow from the block to the bottom
+	 * @param ctx Context for rendering
+	 * @param x X position in the context
+	 * @param y Y position in the context
+	 * @param color Color of the block
+	 */
+	private drawBlockShadow(ctx: CanvasRenderingContext2D, x: number, y1: number, y2: number, color: string): void {
+		// Adding the opacity to the color
+		this.drawRect(ctx, x, y1, constants.TILE_SIZE, y2, color + '22');
+	}
+
+	/**
 	 *
 	 * @param ctx Context for rendering
 	 * @param image Image to be rendered to the context
@@ -97,14 +109,16 @@ class RenderingTools {
 	 */
 	public preDrawGame(fieldManager: FieldManager): void {
 		this.gamePreRenderer.draw((ctx, w, h) => {
-			//* Fill are with black color
+			//* Fill with black color
 			this.drawRect(ctx, 0, 0, w, h, '#000000');
+			//* Fill the first row with the red color
+			this.drawRect(ctx, 0, 0, constants.GAME_WIDTH, constants.TILE_SIZE, '#ff000022');
 			//* Draw blocks with its color
 			fieldManager.iterate((row, col, color) => {
 				this.drawBlock(ctx, col * constants.TILE_SIZE, row * constants.TILE_SIZE, color);
 			});
 			//* Draw sidebar border
-			// Yes, I rather use rect than a line ¯\_(ツ)_/¯
+			// Yes, I rather use the rectangle than a line ¯\_(ツ)_/¯
 			this.drawRect(ctx, constants.GAME_WIDTH, 0, constants.SIDEBAR_BORDER_WIDTH, h, '#ffffff');
 		});
 	}
@@ -139,13 +153,36 @@ class RenderingTools {
 	/**
 	 * Draw current block to the renderer
 	 * @param block Source of the block
+	 * @param fieldManager Source of the game field to calculate shadow
 	 */
-	public drawCurrentBlock(block: Block): void {
+	public drawCurrentBlock(block: Block, fieldManager: FieldManager): void {
+		const shadows: NumDictionary<number> = {};
+
 		block.iterate((row, col) => {
-			const x = (block.x + col) * constants.TILE_SIZE;
-			const y = (block.y + row) * constants.TILE_SIZE;
-			this.drawBlock(this.ctx, x, y, block.color);
+			const x = block.x + col;
+			const y = block.y + row;
+			this.drawBlock(this.ctx, x * constants.TILE_SIZE, y * constants.TILE_SIZE, block.color);
+			if (!shadows[x] || shadows[x] < y) { shadows[x] = y; }
 		});
+
+		for (let key in shadows) {
+			const x = Number(key);
+			const y = shadows[x] > 1 ? shadows[x] : 1;
+			const endOfShadow = (fieldManager.firstValueInCol(x, Math.max(y, 0)) - y) * constants.TILE_SIZE;
+			this.drawBlockShadow(this.ctx, x * constants.TILE_SIZE, y * constants.TILE_SIZE, endOfShadow, block.color);
+		}
+	}
+
+
+	/**
+	 * Clear rows from the renderer
+	 * @param rowIndexes Array with indexes of the rows to be cleared
+	 */
+	public hideRows(rowIndexes: Array<number>): void {
+		for (let i = 0; i < rowIndexes.length; i++) {
+			const y = rowIndexes[i] * constants.TILE_SIZE;
+			this.ctx.clearRect(0, y, constants.GAME_WIDTH, constants.TILE_SIZE);
+		}
 	}
 
 	/** Draw cached game to the renderer */

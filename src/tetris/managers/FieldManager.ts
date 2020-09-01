@@ -122,20 +122,44 @@ class FieldManager {
 		return coliding;
 	};
 
-	/**
-	 * Iterate through the field and clear filled rows
-	 * @param fn Function called for every cleared row
-	 */
-	public clearFilledRows(fn: (row: number, cleared: number) => void): number {
-		let cleared = 0;
+	/** Returns array with indexes of filled rows  */
+	public getFilledRows(): Array<number> {
+		const filledRows: Array<number> = [];
 		this.iterateRows((row) => {
 			if (this.isRowFilled(row)) {
-				this.clearRow(row);
-				// Reason of this function is only for particles generation on row clear
-				fn(row, ++cleared);
+				filledRows.push(row);
 			}
 		});
+		return filledRows;
+	}
+
+	/**
+	 * Iterate through the field and clear filled rows
+	 * @param rows Array with row indexes to be cleared
+	 * @param fn Function called for every cleared row
+	 */
+	public clearRows(rows: Array<number>, fn: (row: number, cleared: number) => void): number {
+		let cleared = 0;
+		for (let row of rows) {
+			this.clearRow(row);
+			// Reason of this function is only for particles generation on row clear
+			fn(row, ++cleared);
+		}
 		return cleared;
+	}
+
+	/**
+	 * Returns index of first value in given column or field height for no value found
+	 * @param col Columns to be looked in
+	 * @param startRow Row to start looking from
+	 */
+	public firstValueInCol(col: number, startRow: number = 0): number {
+		for (let row = startRow; row < ROW_COUNT; row++) {
+			if (this.field[row][col]) {
+				return row;
+			}
+		}
+		return ROW_COUNT;
 	}
 
 	/**

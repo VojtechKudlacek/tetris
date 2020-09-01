@@ -23,8 +23,7 @@ class PreRenderer {
 		// I dont like this either, so I don't know why it's here ¯\_(ツ)_/¯
 		this.canvas.width = this.width = props.width;
 		this.canvas.height = this.height = props.height;
-		// Disabled alpha for some small performance boost
-		this.ctx = this.canvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D;
+		this.ctx = this.canvas.getContext('2d') as CanvasRenderingContext2D;
 	}
 
 	/** Clear the cached context */

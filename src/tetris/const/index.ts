@@ -2,7 +2,7 @@ export { COLORS } from './colors';
 export { AVAILABLE_KEYS } from './keys';
 
 /** Number of rows in the game */
-export const ROW_COUNT = 20;
+export const ROW_COUNT = 21;
 /** Number of columns in the game */
 export const COL_COUNT = 10;
 /** Number of pixels for one tile */
@@ -35,3 +35,7 @@ export const LEVEL_COUNT = 18;
 export const ROWS_TO_INCREASE_LEVEL = 60;
 /** Number of ticks to delay next block movement */
 export const MOVEMENT_DELAY = 15;
+/** Time to reduce clear delay iterations */
+export const CLEAR_DELAY = 100;
+/** Number of iterations to be cleared before clearing filled rows */
+export const CLEAR_DELAY_ITERATIONS = 5;

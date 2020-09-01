@@ -5,7 +5,7 @@ interface Properties {
 	bonusClassName?: string;
 }
 
-const Score: Component<Properties> = ({ child, bonusClassName }) => {
+const Overlay: Component<Properties> = ({ child, bonusClassName }) => {
 	let className = 'tetris-overlay';
 
 	if (bonusClassName) {
@@ -21,4 +21,4 @@ const Score: Component<Properties> = ({ child, bonusClassName }) => {
 	});
 };
 
-export default Score;
+export default Overlay;

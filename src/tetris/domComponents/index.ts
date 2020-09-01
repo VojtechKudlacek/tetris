@@ -1,3 +1,4 @@
+export {default as ControlSettings} from './ControlSettings';
 export {default as GameInterface} from './GameInterface';
 export {default as GameOver} from './GameOver';
 export {default as Menu} from './Menu';
