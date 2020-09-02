@@ -12,7 +12,7 @@ Once I was bored and wanted to try `esbuild` library, so I created a project. We
 
 - Control settings
 
-- Slam and tetris earthquake
+- Tetris and hard drop earthquake
 
 ## Code
 
