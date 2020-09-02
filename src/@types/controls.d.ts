@@ -2,7 +2,6 @@ interface Controls<T = number> {
 	LEFT: T;
 	RIGHT: T;
 	DOWN: T;
-	UP: T;
 	DROP: T;
 	PAUSE: T;
 	ROTATE_LEFT: T;

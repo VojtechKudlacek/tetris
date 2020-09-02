@@ -349,9 +349,6 @@ class Tetris {
 				case controls.DOWN:
 					this.interval = constants.SLAM_INTERVAL;
 					break;
-				case controls.UP:
-					this.interval = Infinity; // TODO: Remove this
-					break;
 				case controls.LEFT:
 					if (!this.pressedLeft) {
 						this.pressedLeft = true;
@@ -390,7 +387,6 @@ class Tetris {
 		this.controlManager.setListener('keyup', (keyCode, controls) => {
 			switch (keyCode) {
 				case controls.DOWN:
-				case controls.UP:
 					this.interval = this.originalInterval;
 					break;
 				case controls.LEFT:

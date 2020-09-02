@@ -8,7 +8,6 @@ class ControlManager {
 		LEFT: 37, // Arrow left
 		RIGHT: 39, // Arrow right
 		DOWN: 40, // Arrow down
-		UP: 38, // Arrow up
 		DROP: 32, // Space
 		PAUSE: 80, // P
 		ROTATE_LEFT: 65, // A
