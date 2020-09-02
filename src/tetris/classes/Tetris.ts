@@ -135,9 +135,9 @@ class Tetris {
 	}
 
 	/** Clear the rows after a delay */
-	private async clearRows(): Promise<number> {
+	private async clearRows(clearDelayIterations: number = constants.CLEAR_DELAY_ITERATIONS): Promise<number> {
 		if (!this.rowsToClear.length) { return 0; }
-		this.clearDelayIterations = constants.CLEAR_DELAY_ITERATIONS;
+		this.clearDelayIterations = clearDelayIterations;
 		while (this.clearDelayIterations > 0) {
 			// Await in while D:<
 			await utils.delay(constants.CLEAR_DELAY);
@@ -175,7 +175,12 @@ class Tetris {
 		// Clear filled rows from the field
 		this.rowsToClear = this.fieldManager.getFilledRows();
 		// It's async so there can be the animation
-		const clearedRows = await this.clearRows();
+		let clearedRows = 0;
+		if (slamed && this.rowsToClear.length >= 4) {
+			clearedRows = await this.clearRows(0);
+		} else {
+			clearedRows = await this.clearRows();
+		}
 
 		if (this.fieldManager.isBlockInFirstRow) {
 			// End the game if there is a block in the first row
@@ -207,7 +212,7 @@ class Tetris {
 	//* Game processing
 
 	/** Process block movement */
-	private processMove(): void {
+	private async processMove(): Promise<void> {
 		// Just to make the next line shorter ¯\_(ツ)_/¯
 		const { x, y } = this.blockFactory.currentBlock;
 		if (!this.fieldManager.isColiding(this.blockFactory.currentBlock, x, y + 1)) {
@@ -215,7 +220,7 @@ class Tetris {
 			this.blockFactory.currentBlock.y++;
 		} else {
 			// Otherwise place the block
-			this.placeBlock();
+			await this.placeBlock();
 		}
 	}
 
@@ -240,9 +245,9 @@ class Tetris {
 	 * Process game tick in propriate interval
 	 * @param time Time in game to calculate delta
 	 */
-	private processGame(time: number): void {
+	private async processGame(time: number): Promise<void> {
 		if (time - this.lastUpdateTime > this.interval) {
-			this.processMove();
+			await this.processMove();
 			this.lastUpdateTime = time;
 		}
 	}
@@ -289,7 +294,7 @@ class Tetris {
 	 * Game loop for rendering and game processing
 	 * @param time Time spent in game
 	 */
-	private loop = (time: number): void => {
+	private loop = async (time: number): Promise<void> => {
 		requestAnimationFrame(this.loop);
 		if (this.isPaused) { return; }
 		// Process particles
@@ -297,7 +302,7 @@ class Tetris {
 		// Check if state is running game or menu
 		if (this.isInGame && !this.isGameOver && this.clearDelayIterations === 0) {
 			this.processControls();
-			this.processGame(time);
+			await this.processGame(time);
 		} else if (!this.isInGame) {
 			this.processMenu();
 		}
@@ -443,6 +448,13 @@ class Tetris {
 		this.renderControlsEditScreen();
 	}
 
+	/** Reset controls to defaults */
+	private onControlsReset = (): void => {
+		this.controlManager.restartKeys();
+		// It is easier to rerender :)
+		this.renderControlsEditScreen();
+	}
+
 	//* Component rendering
 
 	private renderGameInterface(): void {
@@ -484,10 +496,7 @@ class Tetris {
 			keys: this.controlManager.controls,
 			updateKey: this.controlManager.updateKey,
 			onMenu: this.onMenu,
-			onRestart: () => {
-				this.controlManager.restartKeys();
-				this.renderControlsEditScreen();
-			},
+			onReset: this.onControlsReset,
 		})
 	}
 
