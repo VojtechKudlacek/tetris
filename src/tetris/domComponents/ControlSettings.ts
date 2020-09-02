@@ -4,12 +4,12 @@ import Overlay from './Overlay';
 
 interface Properties {
 	updateKey: (key: keyof Controls, value: number) => void;
-	onRestart: () => void;
+	onReset: () => void;
 	onMenu: () => void;
 	keys: Controls;
 }
 
-const ControlSettings: Component<Properties> = ({ updateKey, onRestart, onMenu, keys }) => {
+const ControlSettings: Component<Properties> = ({ updateKey, onReset, onMenu, keys }) => {
 	const controls = [
 		['Left', keys.LEFT, 'LEFT'],
 		['Right', keys.RIGHT, 'RIGHT'],
@@ -20,8 +20,8 @@ const ControlSettings: Component<Properties> = ({ updateKey, onRestart, onMenu, 
 		['Pause', keys.PAUSE, 'PAUSE'],
 	];
 
-	const retryButton = createDomElement('button', 'tetris-button', 'RESTART');
-	retryButton.addEventListener('click', onRestart);
+	const retryButton = createDomElement('button', 'tetris-button', 'RESET');
+	retryButton.addEventListener('click', onReset);
 
 	const mainMenuButton = createDomElement('button', 'tetris-button', 'MAIN MENU');
 	mainMenuButton.addEventListener('click', onMenu);

@@ -51,7 +51,7 @@ class Block implements Vector {
 				if (this.value[row].includes(1)) { break; }
 				emptyRows++;
 			}
-			this.y = -(this.minSize + emptyRows);
+			this.y = -(this.minSize + emptyRows - 1);
 		} else {
 			this.y = props.y;
 		}
