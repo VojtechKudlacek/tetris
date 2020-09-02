@@ -7,7 +7,7 @@ tetris.init();
 
 const versionRenderer = document.getElementById('version');
 if (versionRenderer) {
-	versionRenderer.innerHTML = '0.9.5';
+	versionRenderer.innerHTML = '1.0.0';
 }
 
 workers.unregister();

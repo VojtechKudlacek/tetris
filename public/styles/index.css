@@ -238,3 +238,38 @@ code {
 	color: #000000;
 	background: #ffffff;
 }
+
+.volume-controls {
+	position: absolute;
+	top: -25px;
+	right: 0;
+}
+
+.volume-icon {
+	display: inline-block;
+	height: 18px;
+	vertical-align: middle;
+	margin-left: 5px;
+}
+
+.volume-input {
+	-webkit-appearance: none;
+	appearance: none;
+	height: 2px;
+	width: 100px;
+  background: #ffffff;
+  outline: none;
+	cursor: pointer;
+	position: relative;
+  top: -2px;
+}
+
+.volume-input::-webkit-slider-thumb {
+	-webkit-appearance: none;
+  appearance: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+  cursor: pointer;
+}

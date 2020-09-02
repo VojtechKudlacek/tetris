@@ -83,6 +83,7 @@ class Tetris {
 	private endTheGame(): void {
 		this.scoreManager.updateHighScore();
 		this.renderGameOverScreen();
+		this.audioManager.play('GAME_OVER');
 		this.isGameOver = true;
 	}
 
@@ -161,6 +162,7 @@ class Tetris {
 	/** Place the block and do everything else */
 	private async placeBlock(slamed: boolean = false): Promise<void> {
 		this.fieldManager.placeBlock(this.blockFactory.currentBlock);
+		this.audioManager.play('FALL');
 		// Draw particles for slaming the block
 		if (slamed) { this.domManager.shake(3); }
 		if (slamed || this.interval <= constants.SLAM_INTERVAL) {
@@ -193,6 +195,11 @@ class Tetris {
 			// Update next block preview
 			this.renderingTools.preDrawNextBlock(this.blockFactory.nextBlock);
 			if (clearedRows) {
+				if (clearedRows >= 4 && slamed) {
+					this.audioManager.play('BOOM');
+				} else {
+					this.audioManager.play('CLEAR');
+				}
 				// Shake for TETRIS
 				// There could be `===`, this is just to be sure ¯\_(ツ)_/¯
 				if (clearedRows >= 4) {
@@ -427,6 +434,7 @@ class Tetris {
 	 * @param level Selected level
 	 */
 	private onLevelSelect = (level: number): void => {
+		this.audioManager.play('CLICK');
 		this.initialLevel = level;
 		this.level = level;
 		this.startGame();
@@ -434,25 +442,38 @@ class Tetris {
 
 	/** End the game and render menu screen */
 	private onMenu = (): void => {
+		this.audioManager.play('CLICK');
 		this.isInGame = false;
 		this.renderMenuScreen();
 	}
 
 	/** Start new game with same selected level */
 	private onRestart = (): void => {
+		this.audioManager.play('CLICK');
 		this.startGame();
 	}
 
 	/** Show controls edit screen */
 	private onControls = (): void => {
+		this.audioManager.play('CLICK');
 		this.renderControlsEditScreen();
 	}
 
 	/** Reset controls to defaults */
 	private onControlsReset = (): void => {
+		this.audioManager.play('CLICK');
 		this.controlManager.restartKeys();
 		// It is easier to rerender :)
 		this.renderControlsEditScreen();
+	}
+
+	/**
+	 * Change volume and play sample
+	 * @param value Volume value from 0 to 1
+	 */
+	private onVolumeChange = (value: number): void => {
+		this.audioManager.changeVolume(value);
+		this.audioManager.play('CLICK');
 	}
 
 	//* Component rendering
@@ -504,9 +525,10 @@ class Tetris {
 
 	/** Init listeners, create dom elements and setup the game */
 	public init(): void {
-		this.domManager.init();
-		this.controlManager.init();
 		this.audioManager.init();
+		this.domManager.init();
+		this.domManager.createVolumeControl(this.audioManager.volume, this.onVolumeChange);
+		this.controlManager.init();
 		this.initListeners();
 		this.renderMenuScreen();
 		requestAnimationFrame(this.loop);
